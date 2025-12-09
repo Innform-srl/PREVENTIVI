@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/SOFTWARE-PREVENTIVI/static/css/main.601f197e.css",
+    "main.js": "/SOFTWARE-PREVENTIVI/static/js/main.662a1fdb.js",
+    "index.html": "/SOFTWARE-PREVENTIVI/index.html",
+    "main.601f197e.css.map": "/SOFTWARE-PREVENTIVI/static/css/main.601f197e.css.map",
+    "main.662a1fdb.js.map": "/SOFTWARE-PREVENTIVI/static/js/main.662a1fdb.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.601f197e.css",
+    "static/js/main.662a1fdb.js"
+  ]
+}

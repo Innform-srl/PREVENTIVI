@@ -399,7 +399,8 @@ const BudgetPlannerMultiAula = () => {
                 ))}
               </div>
               <div style={{ padding: '28px', background: margine >= 0 ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', textAlign: 'center', border: '1px solid ' + (margine >= 0 ? '#a7f3d0' : '#fca5a5') }}>
-                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '500' }}>MARGINE TOTALE</div>
+                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '500' }}>MARGINE TOTALE + Guadagno Azienda</div>
+                <div style={{ fontSize: '11px', color: margine >= 0 ? '#059669' : '#dc2626', marginTop: '4px', opacity: 0.8 }}>(da Realizzazione e Docenze marcate "Az")</div>
                 <div style={{ fontSize: '42px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margine)}</div>
               </div>
             </section>

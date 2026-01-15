@@ -194,19 +194,22 @@ const BudgetPlannerMultiAula = () => {
     const pesoAula = ricavoTotale > 0 ? ricavoAula / ricavoTotale : 0;
     const feeP1 = feePartner1Calc * pesoAula;
     const feeP2 = feePartner2Calc * pesoAula;
-    
-    // Costo Partner 1 per aula: attività realizzazione marcate P1 + fee Partner 1
+
+    // Costo Partner 1 per aula: attività realizzazione marcate P1 + docenze marcate P1 + fee Partner 1
     const realizzazioneP1Aula = realizzazioneCosti.filter(item => item.partner1 && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
-    const costoP1Aula = realizzazioneP1Aula + feeP1;
-    
+    const docenzeP1Aula = docenzeCosti.filter(item => item.partner1 && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
+      return acc + (item.tariffaOraria * item.ore);
+    }, 0);
+    const costoP1Aula = realizzazioneP1Aula + docenzeP1Aula + feeP1;
+
     // Costo Partner 2 per aula: docenze marcate P2 + fee Partner 2
     const docenzeP2Aula = docenzeCosti.filter(item => item.partner2 && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
     const costoP2Aula = docenzeP2Aula + feeP2;
-    
+
     // Guadagno Azienda per aula: attività marcate Azienda
     const realizzazioneAzAula = realizzazioneCosti.filter(item => item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
@@ -215,36 +218,36 @@ const BudgetPlannerMultiAula = () => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
     const guadagnoAzAula = realizzazioneAzAula + docenzeAzAula;
-    
-    // Altri Costi per aula: gestione + realizzazione non P1 non Az + docenze non P2 non Az
+
+    // Altri Costi per aula: gestione + realizzazione non P1 non Az + docenze non P2 non P1 non Az
     const realizzazioneAltriAula = realizzazioneCosti.filter(item => !item.partner1 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
-    const docenzeAltriAula = docenzeCosti.filter(item => !item.partner2 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
+    const docenzeAltriAula = docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
     const altriCostiAula = gestioneAula + realizzazioneAltriAula + docenzeAltriAula;
-    
-    return { 
-      gestione: gestioneAula, 
-      realizzazione: realizzazioneAula, 
-      docenze: docenzeAula, 
-      feePartner1: feeP1, 
-      feePartner2: feeP2, 
+
+    return {
+      gestione: gestioneAula,
+      realizzazione: realizzazioneAula,
+      docenze: docenzeAula,
+      feePartner1: feeP1,
+      feePartner2: feeP2,
       costoPartner1: costoP1Aula,
       costoPartner2: costoP2Aula,
       guadagnoAzienda: guadagnoAzAula,
       altriCosti: altriCostiAula,
-      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2 
+      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2
     };
   };
   const totaleCommerciale = feePartner1Calc + feePartner2Calc;
   // I costi si moltiplicano per il numero di aule assegnate
-  const costoPartner1 = realizzazioneCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner1Calc;
+  const costoPartner1 = realizzazioneCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner1Calc;
   const costoPartner2 = docenzeCosti.filter(item => item.partner2).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner2Calc;
   const guadagnoAzienda = realizzazioneCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
   const costoTotaleProgetto = totaleGestione + totaleRealizzazione + totaleDocenze + totaleCommerciale;
-  const altriCosti = totaleGestione + realizzazioneCosti.filter(item => !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => !item.partner2 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
+  const altriCosti = totaleGestione + realizzazioneCosti.filter(item => !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
   const margine = ricavoTotale - costoTotaleProgetto + guadagnoAzienda;
   const incidenzaPartner1 = ricavoTotale > 0 ? (costoPartner1 / ricavoTotale) * 100 : 0;
   const incidenzaPartner2 = ricavoTotale > 0 ? (costoPartner2 / ricavoTotale) * 100 : 0;
@@ -272,7 +275,7 @@ const BudgetPlannerMultiAula = () => {
 
   const aggiungiRigaGestione = () => setGestioneCosti([...gestioneCosti, { id: Date.now(), voce: 'Nuova Voce', costoUnitario: 0, quantita: 1, note: '', auleAssegnate: aule.map(a => a.id) }]);
   const aggiungiRigaRealizzazione = () => setRealizzazioneCosti([...realizzazioneCosti, { id: Date.now(), voce: 'Nuova Attività', tariffaOraria: 0, ore: 0, partner1: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
-  const aggiungiRigaDocenze = () => setDocenzeCosti([...docenzeCosti, { id: Date.now(), docente: 'Nuovo Docente', tariffaOraria: 0, ore: 0, partner2: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
+  const aggiungiRigaDocenze = () => setDocenzeCosti([...docenzeCosti, { id: Date.now(), docente: 'Nuovo Docente', tariffaOraria: 0, ore: 0, partner1: false, partner2: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
   const rimuoviRigaGestione = (id) => setGestioneCosti(gestioneCosti.filter(item => item.id !== id));
   const rimuoviRigaRealizzazione = (id) => setRealizzazioneCosti(realizzazioneCosti.filter(item => item.id !== id));
   const rimuoviRigaDocenze = (id) => setDocenzeCosti(docenzeCosti.filter(item => item.id !== id));
@@ -403,16 +406,18 @@ const BudgetPlannerMultiAula = () => {
             <section style={{ background: 'white', borderRadius: '20px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <h2 style={{ margin: '0 0 24px', fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>Riepilogo per Aula</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-                {aule.filter(a => a.attiva).map(aula => { const ricavo = calcolaRicavoAula(aula); const costi = calcolaCostiAula(aula.id); const margineAula = ricavo - costi.totale; return (
-                  <div key={aula.id} style={{ padding: '24px', background: '#fafafa', borderRadius: '16px', border: '2px solid ' + aula.colore + '30' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: aula.colore }}>{aula.nome}</h3><span style={{ padding: '4px 12px', background: aula.colore, color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>{aula.numeroAllievi} allievi • {aula.oreTotaliCorso}h</span></div>
-                    <div style={{ display: 'grid', gap: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Ricavo</span><span style={{ fontWeight: '600', color: '#059669' }}>{formatCurrency(ricavo)}</span></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Costi</span><span style={{ fontWeight: '600', color: '#dc2626' }}>{formatCurrency(costi.totale)}</span></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: margineAula >= 0 ? '#ecfdf5' : '#fef2f2', borderRadius: '10px', border: '1px solid ' + (margineAula >= 0 ? '#a7f3d0' : '#fca5a5') }}><span style={{ fontWeight: '600', color: '#1e293b' }}>Margine</span><span style={{ fontWeight: '700', fontSize: '18px', color: margineAula >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margineAula)}</span></div>
+                {aule.filter(a => a.attiva).map(aula => {
+                  const ricavo = calcolaRicavoAula(aula); const costi = calcolaCostiAula(aula.id); const margineAula = ricavo - costi.totale; return (
+                    <div key={aula.id} style={{ padding: '24px', background: '#fafafa', borderRadius: '16px', border: '2px solid ' + aula.colore + '30' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: aula.colore }}>{aula.nome}</h3><span style={{ padding: '4px 12px', background: aula.colore, color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>{aula.numeroAllievi} allievi • {aula.oreTotaliCorso}h</span></div>
+                      <div style={{ display: 'grid', gap: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Ricavo</span><span style={{ fontWeight: '600', color: '#059669' }}>{formatCurrency(ricavo)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Costi</span><span style={{ fontWeight: '600', color: '#dc2626' }}>{formatCurrency(costi.totale)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: margineAula >= 0 ? '#ecfdf5' : '#fef2f2', borderRadius: '10px', border: '1px solid ' + (margineAula >= 0 ? '#a7f3d0' : '#fca5a5') }}><span style={{ fontWeight: '600', color: '#1e293b' }}>Margine</span><span style={{ fontWeight: '700', fontSize: '18px', color: margineAula >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margineAula)}</span></div>
+                      </div>
                     </div>
-                  </div>
-                ); })}
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -511,11 +516,12 @@ const BudgetPlannerMultiAula = () => {
               {docenzeCosti.length === 0 ? <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Nessuna docenza.</div> : (
                 <div style={{ display: 'grid', gap: '12px' }}>{docenzeCosti.map((item) => (
                   <div key={item.id} style={{ padding: '20px', background: '#fafafa', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto auto auto', gap: '12px', alignItems: 'end', marginBottom: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto auto auto auto', gap: '12px', alignItems: 'end', marginBottom: '16px' }}>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Docente</label><input type="text" value={item.docente} onChange={(e) => aggiornaDocenze(item.id, 'docente', e.target.value)} style={inputStyle} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Tariffa €/h</label><input type="number" step="0.01" value={item.tariffaOraria || ''} onChange={(e) => aggiornaDocenze(item.id, 'tariffaOraria', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Ore</label><input type="number" value={item.ore || ''} onChange={(e) => aggiornaDocenze(item.id, 'ore', parseInt(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#f5f3ff', borderRadius: '10px', fontWeight: '700', color: '#7c3aed', border: '1px solid #c4b5fd' }}>{formatCurrency(item.tariffaOraria * item.ore)}</div></div>
+                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P1</label><input type="checkbox" checked={item.partner1} onChange={(e) => aggiornaDocenze(item.id, 'partner1', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#2563eb' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P2</label><input type="checkbox" checked={item.partner2} onChange={(e) => aggiornaDocenze(item.id, 'partner2', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#7c3aed' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Az</label><input type="checkbox" checked={item.azienda} onChange={(e) => aggiornaDocenze(item.id, 'azienda', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#d97706' }} /></div>
                       <button onClick={() => rimuoviRigaDocenze(item.id)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '10px', cursor: 'pointer' }}>🗑️</button>

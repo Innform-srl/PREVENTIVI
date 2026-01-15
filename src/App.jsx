@@ -399,9 +399,21 @@ const BudgetPlannerMultiAula = () => {
                 ))}
               </div>
               <div style={{ padding: '28px', background: margine >= 0 ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', textAlign: 'center', border: '1px solid ' + (margine >= 0 ? '#a7f3d0' : '#fca5a5') }}>
-                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '500' }}>MARGINE TOTALE + Guadagno Azienda</div>
-                <div style={{ fontSize: '11px', color: margine >= 0 ? '#059669' : '#dc2626', marginTop: '4px', opacity: 0.8 }}>(da Realizzazione e Docenze marcate "Az")</div>
-                <div style={{ fontSize: '42px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margine)}</div>
+                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '8px' }}>MARGINE TOTALE</div>
+                <div style={{ fontSize: '42px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626', marginBottom: '16px' }}>{formatCurrency(margine)}</div>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '13px', color: margine >= 0 ? '#047857' : '#b91c1c', background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '10px' }}>
+                  <span>= A. Ricavo Totale</span>
+                  <span style={{ fontWeight: '700' }}>({formatCurrency(ricavoTotale)})</span>
+                  <span>−</span>
+                  <span>B. Costo Totale</span>
+                  <span style={{ fontWeight: '700' }}>({formatCurrency(costoTotaleProgetto)})</span>
+                  <span>+</span>
+                  <span>E. Guadagno Azienda</span>
+                  <span style={{ fontWeight: '700' }}>({formatCurrency(guadagnoAzienda)})</span>
+                </div>
+                <div style={{ fontSize: '11px', color: margine >= 0 ? '#059669' : '#dc2626', marginTop: '10px', opacity: 0.8, fontStyle: 'italic' }}>
+                  Il Guadagno Azienda deriva dalle voci in "Costi → Realizzazione" e "Costi → Docenze" con checkbox "Az" attivo
+                </div>
               </div>
             </section>
             <section style={{ background: 'white', borderRadius: '20px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>

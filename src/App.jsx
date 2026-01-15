@@ -469,6 +469,42 @@ const BudgetPlannerMultiAula = () => {
 
         {tabAttiva === 'costi' && (
           <div>
+            {/* Riepilogo Sticky con Sticker */}
+            <div style={{
+              position: 'sticky',
+              top: '100px',
+              zIndex: 50,
+              marginBottom: '24px',
+              background: 'white',
+              borderRadius: '20px',
+              padding: '28px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+            }}>
+              <h2 style={{ margin: '0 0 24px', fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>📊 Riepilogo Costi</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', borderRadius: '16px', border: '1px solid #a7f3d0' }}>
+                  <div style={{ fontSize: '12px', color: '#047857', fontWeight: '500' }}>A. Gestione</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#059669' }}>{formatCurrency(totaleGestione)}</div>
+                </div>
+                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderRadius: '16px', border: '1px solid #93c5fd' }}>
+                  <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: '500' }}>B. Realizzazione</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency(totaleRealizzazione)}</div>
+                </div>
+                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', borderRadius: '16px', border: '1px solid #c4b5fd' }}>
+                  <div style={{ fontSize: '12px', color: '#6d28d9', fontWeight: '500' }}>C. Docenze</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#7c3aed' }}>{formatCurrency(totaleDocenze)}</div>
+                </div>
+                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', borderRadius: '16px', border: '1px solid #fcd34d' }}>
+                  <div style={{ fontSize: '12px', color: '#b45309', fontWeight: '500' }}>D. Fee Commerciali</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#d97706' }}>{formatCurrency(totaleCommerciale)}</div>
+                </div>
+              </div>
+              <div style={{ padding: '24px', background: 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', textAlign: 'center', border: '1px solid #fca5a5' }}>
+                <div style={{ fontSize: '14px', color: '#b91c1c', fontWeight: '500' }}>COSTO TOTALE PROGETTO</div>
+                <div style={{ fontSize: '36px', fontWeight: '800', color: '#dc2626' }}>{formatCurrency(costoTotaleProgetto)}</div>
+              </div>
+            </div>
+
             <section style={{ background: 'white', borderRadius: '20px', padding: '28px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>Funzionamento e Gestione</h2><div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><span style={{ fontSize: '14px', color: '#64748b' }}>Totale: <strong style={{ color: '#059669' }}>{formatCurrency(totaleGestione)}</strong></span><button onClick={aggiungiRigaGestione} style={btnStyle}>+ Aggiungi</button></div></div>
               {gestioneCosti.length === 0 ? <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Nessuna voce. Clicca "Aggiungi".</div> : (

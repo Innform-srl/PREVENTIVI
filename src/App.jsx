@@ -219,6 +219,9 @@ const BudgetPlannerMultiAula = () => {
     }, 0);
     const guadagnoAzAula = realizzazioneAzAula + docenzeAzAula;
 
+    // Righe marcate sia P1 che Az: pesano doppio sul costo aula
+    const doppioP1AzAula = realizzazioneCosti.filter(item => item.partner1 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0) + docenzeCosti.filter(item => item.partner1 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0);
+
     // Altri Costi per aula: gestione + realizzazione non P1 non Az + docenze non P2 non P1 non Az
     const realizzazioneAltriAula = realizzazioneCosti.filter(item => !item.partner1 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
@@ -238,7 +241,7 @@ const BudgetPlannerMultiAula = () => {
       costoPartner2: costoP2Aula,
       guadagnoAzienda: guadagnoAzAula,
       altriCosti: altriCostiAula,
-      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2
+      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2 + doppioP1AzAula
     };
   };
   const totaleCommerciale = feePartner1Calc + feePartner2Calc;
@@ -246,7 +249,9 @@ const BudgetPlannerMultiAula = () => {
   const costoPartner1 = realizzazioneCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner1Calc;
   const costoPartner2 = docenzeCosti.filter(item => item.partner2).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner2Calc;
   const guadagnoAzienda = realizzazioneCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
-  const costoTotaleProgetto = totaleGestione + totaleRealizzazione + totaleDocenze + totaleCommerciale;
+  // Quando una riga è marcata sia P1 che Az, il suo importo pesa doppio sul progetto (una volta P1, una volta Az)
+  const doppioP1Az = realizzazioneCosti.filter(item => item.partner1 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner1 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
+  const costoTotaleProgetto = totaleGestione + totaleRealizzazione + totaleDocenze + totaleCommerciale + doppioP1Az;
   const altriCosti = totaleGestione + realizzazioneCosti.filter(item => !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
   const margine = ricavoTotale - costoTotaleProgetto + guadagnoAzienda;
   const incidenzaPartner1 = ricavoTotale > 0 ? (costoPartner1 / ricavoTotale) * 100 : 0;

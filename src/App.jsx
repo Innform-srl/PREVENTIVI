@@ -20,6 +20,20 @@ const BudgetPlannerMultiAula = () => {
   const [mostraModalCarica, setMostraModalCarica] = useState(false);
   const [mostraAdmin, setMostraAdmin] = useState(false);
   const [mostraConfigAule, setMostraConfigAule] = useState(false);
+  const [mostraModalPDF, setMostraModalPDF] = useState(false);
+  const [sezioniPDF, setSezioniPDF] = useState({
+    intestazione: true,
+    riepilogoGlobale: true,
+    incidenze: true,
+    margine: true,
+    configAule: true,
+    feeCommerciali: true,
+    dettaglioGestione: true,
+    dettaglioRealizzazione: true,
+    dettaglioDocenze: true,
+    confrontoAule: true,
+    note: true,
+  });
   const [preventivi, setPreventivi] = useState([]);
   const [messaggioStato, setMessaggioStato] = useState('Pronto per iniziare.');
   const [ricercaPreventivo, setRicercaPreventivo] = useState('');
@@ -322,7 +336,32 @@ const BudgetPlannerMultiAula = () => {
   };
 
   const salvaPDF = () => {
-    window.print();
+    setMostraModalPDF(true);
+  };
+
+  const eseguiStampaPDF = () => {
+    setMostraModalPDF(false);
+    setTimeout(() => window.print(), 100);
+  };
+
+  const toggleSezionePDF = (chiave) => {
+    setSezioniPDF(prev => ({ ...prev, [chiave]: !prev[chiave] }));
+  };
+
+  const selezionaTutteSezioniPDF = (valore) => {
+    setSezioniPDF({
+      intestazione: valore,
+      riepilogoGlobale: valore,
+      incidenze: valore,
+      margine: valore,
+      configAule: valore,
+      feeCommerciali: valore,
+      dettaglioGestione: valore,
+      dettaglioRealizzazione: valore,
+      dettaglioDocenze: valore,
+      confrontoAule: valore,
+      note: valore,
+    });
   };
 
   // ============ EFFECTS ============
@@ -668,6 +707,81 @@ const BudgetPlannerMultiAula = () => {
       {mostraConfigAule && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '700px', width: '90%', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>🏫 Gestione Aule</h3><button onClick={() => setMostraConfigAule(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><p style={{ color: '#64748b', marginBottom: '24px', fontSize: '14px' }}>Ogni aula = un'edizione con proprio finanziamento. Assegna i costi a una o più aule.</p><div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>{aule.map((aula) => (<div key={aula.id} style={{ padding: '20px', background: '#fafafa', borderRadius: '14px', border: '2px solid ' + aula.colore + '30' }}><div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><input type="color" value={aula.colore} onChange={(e) => aggiornaAula(aula.id, 'colore', e.target.value)} style={{ width: '40px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }} /><input type="text" value={aula.nome} onChange={(e) => aggiornaAula(aula.id, 'nome', e.target.value)} style={{ ...inputStyle, flex: 1, color: aula.colore, fontWeight: '600' }} /><label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><input type="checkbox" checked={aula.attiva} onChange={(e) => aggiornaAula(aula.id, 'attiva', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: aula.colore }} /><span style={{ fontSize: '13px', color: '#64748b' }}>Attiva</span></label>{aule.length > 1 && <button onClick={() => rimuoviAula(aula.id)} style={{ padding: '10px 14px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>🗑️</button>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Allievi</label><input type="number" value={aula.numeroAllievi || ''} onChange={(e) => aggiornaAula(aula.id, 'numeroAllievi', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Ore</label><input type="number" value={aula.oreTotaliCorso || ''} onChange={(e) => aggiornaAula(aula.id, 'oreTotaliCorso', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>UCS €</label><input type="number" step="0.01" value={aula.ucsApplicata || ''} onChange={(e) => aggiornaAula(aula.id, 'ucsApplicata', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div></div><div style={{ marginTop: '12px', padding: '10px', background: aula.colore + '15', borderRadius: '8px', textAlign: 'center', border: '1px solid ' + aula.colore + '30' }}><span style={{ fontSize: '12px', color: '#64748b' }}>Ricavo: </span><span style={{ fontSize: '18px', fontWeight: '700', color: aula.colore }}>{formatCurrency(calcolaRicavoAula(aula))}</span></div></div>))}</div><button onClick={aggiungiAula} style={{ width: '100%', padding: '16px', ...btnStyle, fontSize: '15px' }}>+ Aggiungi Nuova Aula</button></div></div>)}
 
       {mostraAdmin && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>⚙️ Admin</h3><button onClick={() => setMostraAdmin(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><div><h4 style={{ margin: '0 0 12px', color: '#64748b', fontSize: '14px' }}>Progetti Salvati ({preventivi.length})</h4>{preventivi.length === 0 ? <p style={{ color: '#94a3b8' }}>Nessuno.</p> : preventivi.map(p => (<div key={p.id} style={{ padding: '14px', background: '#f8fafc', borderRadius: '10px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0' }}><div><div style={{ fontWeight: '600', color: '#1e293b' }}>{p.nome}</div><div style={{ fontSize: '12px', color: '#64748b' }}>{formatDate(p.updated_at)}</div></div><button onClick={() => eliminaPreventivo(p.id)} style={{ padding: '8px 16px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>Elimina</button></div>))}</div></div></div>)}
+
+      {/* MODALE SELEZIONE SEZIONI PDF */}
+      {mostraModalPDF && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '640px', width: '92%', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ margin: 0, color: '#1e293b' }}>📄 Seleziona sezioni da stampare</h3>
+              <button onClick={() => setMostraModalPDF(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 16px' }}>Clicca i badge per includere o escludere ogni sezione dal PDF.</p>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '18px' }}>
+              <button onClick={() => selezionaTutteSezioniPDF(true)} style={{ padding: '8px 14px', background: '#eff6ff', color: '#2563eb', border: '1px solid #93c5fd', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✓ Seleziona tutto</button>
+              <button onClick={() => selezionaTutteSezioniPDF(false)} style={{ padding: '8px 14px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✕ Deseleziona tutto</button>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '24px' }}>
+              {[
+                { chiave: 'intestazione', label: '📋 Intestazione progetto', colore: '#2563eb' },
+                { chiave: 'riepilogoGlobale', label: '💰 Riepilogo finanziario globale', colore: '#059669' },
+                { chiave: 'incidenze', label: '📊 Indicatori di incidenza', colore: '#7c3aed' },
+                { chiave: 'margine', label: '🎯 Margine totale', colore: margine >= 0 ? '#059669' : '#dc2626' },
+                { chiave: 'configAule', label: '🏫 Configurazione aule', colore: '#059669' },
+                { chiave: 'feeCommerciali', label: '💼 Fee commerciali', colore: '#d97706' },
+                { chiave: 'dettaglioGestione', label: '🔧 Dettaglio gestione', colore: '#059669' },
+                { chiave: 'dettaglioRealizzazione', label: '🛠️ Dettaglio realizzazione', colore: '#2563eb' },
+                { chiave: 'dettaglioDocenze', label: '👨‍🏫 Dettaglio docenze', colore: '#7c3aed' },
+                { chiave: 'confrontoAule', label: '⚖️ Riepilogo per aula', colore: '#059669' },
+                { chiave: 'note', label: '📝 Note', colore: '#64748b' },
+              ].map(sezione => {
+                const attiva = sezioniPDF[sezione.chiave];
+                return (
+                  <button
+                    key={sezione.chiave}
+                    onClick={() => toggleSezionePDF(sezione.chiave)}
+                    style={{
+                      padding: '10px 16px',
+                      background: attiva ? sezione.colore : '#f1f5f9',
+                      color: attiva ? 'white' : '#64748b',
+                      border: '2px solid ' + (attiva ? sezione.colore : '#e2e8f0'),
+                      borderRadius: '24px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.15s',
+                      opacity: attiva ? 1 : 0.7,
+                    }}
+                  >
+                    <span style={{
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: attiva ? 'rgba(255,255,255,0.25)' : 'white',
+                      border: '1.5px solid ' + (attiva ? 'white' : '#cbd5e1'),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: attiva ? 'white' : 'transparent', fontSize: '11px', fontWeight: '800'
+                    }}>{attiva ? '✓' : ''}</span>
+                    {sezione.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '10px', fontSize: '12px', color: '#64748b', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+              Sezioni incluse: <strong style={{ color: '#2563eb' }}>{Object.values(sezioniPDF).filter(Boolean).length}</strong> su {Object.keys(sezioniPDF).length}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setMostraModalPDF(false)} style={{ flex: 1, padding: '14px', background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', fontWeight: '500' }}>Annulla</button>
+              <button onClick={eseguiStampaPDF} disabled={Object.values(sezioniPDF).every(v => !v)} style={{ flex: 2, padding: '14px', background: Object.values(sezioniPDF).every(v => !v) ? '#cbd5e1' : 'linear-gradient(135deg, #dc2626, #b91c1c)', color: 'white', border: 'none', borderRadius: '12px', cursor: Object.values(sezioniPDF).every(v => !v) ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '14px' }}>📄 Stampa / Salva PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
 
     {/* ============ AREA STAMPABILE (PDF) — visibile solo durante window.print() ============ */}
@@ -675,6 +789,7 @@ const BudgetPlannerMultiAula = () => {
 
       {/* PAGINA 1 — Intestazione + Riepilogo Finanziario Globale */}
       <div className="pdf-page">
+        {sezioniPDF.intestazione && (
         <div className="pdf-avoid-break" style={{ borderBottom: '3px solid #2563eb', paddingBottom: '12px', marginBottom: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -689,8 +804,10 @@ const BudgetPlannerMultiAula = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Riepilogo Finanziario Globale */}
+        {sezioniPDF.riepilogoGlobale && (
         <div className="pdf-avoid-break" style={{ marginBottom: '18px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>Riepilogo Finanziario Globale</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
@@ -722,8 +839,10 @@ const BudgetPlannerMultiAula = () => {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Indicatori di incidenza */}
+        {sezioniPDF.incidenze && (
         <div className="pdf-avoid-break" style={{ marginBottom: '18px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #7c3aed', paddingLeft: '8px' }}>Indicatori di Incidenza sul Ricavo</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
@@ -741,8 +860,10 @@ const BudgetPlannerMultiAula = () => {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Margine Totale */}
+        {sezioniPDF.margine && (
         <div className="pdf-avoid-break" style={{ marginBottom: '18px', padding: '14px', background: margine >= 0 ? '#ecfdf5' : '#fef2f2', border: '2px solid ' + (margine >= 0 ? '#059669' : '#dc2626'), borderRadius: '8px' }}>
           <div style={{ fontSize: '12px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '4px' }}>MARGINE TOTALE</div>
           <div style={{ fontSize: '26px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626', marginBottom: '6px' }}>{formatCurrency(margine)}</div>
@@ -750,8 +871,10 @@ const BudgetPlannerMultiAula = () => {
             = Ricavo Totale ({formatCurrency(ricavoTotale)}) − Costo Totale ({formatCurrency(costoTotaleProgetto)}) + Guadagno Azienda ({formatCurrency(guadagnoAzienda)})
           </div>
         </div>
+        )}
 
         {/* Configurazione Aule */}
+        {sezioniPDF.configAule && (
         <div className="pdf-avoid-break">
           <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #059669', paddingLeft: '8px' }}>Configurazione Aule</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
@@ -785,6 +908,7 @@ const BudgetPlannerMultiAula = () => {
             </tfoot>
           </table>
         </div>
+        )}
       </div>
 
       {/* PAGINA 2 — Dettaglio Costi */}
@@ -792,6 +916,7 @@ const BudgetPlannerMultiAula = () => {
         <h2 style={{ margin: '0 0 14px', fontSize: '16px', color: '#1e293b', borderBottom: '2px solid #dc2626', paddingBottom: '6px' }}>Dettaglio Costi</h2>
 
         {/* Fee Commerciali */}
+        {sezioniPDF.feeCommerciali && (
         <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
           <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#d97706', borderLeft: '4px solid #d97706', paddingLeft: '8px' }}>Fee Commerciali</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
@@ -803,8 +928,10 @@ const BudgetPlannerMultiAula = () => {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Gestione */}
+        {sezioniPDF.dettaglioGestione && (
         <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
           <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#059669', borderLeft: '4px solid #059669', paddingLeft: '8px' }}>A. Funzionamento e Gestione — Totale: {formatCurrency(totaleGestione)}</h3>
           {gestioneCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
@@ -827,8 +954,10 @@ const BudgetPlannerMultiAula = () => {
             </table>
           )}
         </div>
+        )}
 
         {/* Realizzazione */}
+        {sezioniPDF.dettaglioRealizzazione && (
         <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
           <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#2563eb', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>B. Realizzazione — Totale: {formatCurrency(totaleRealizzazione)}</h3>
           {realizzazioneCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
@@ -853,8 +982,10 @@ const BudgetPlannerMultiAula = () => {
             </table>
           )}
         </div>
+        )}
 
         {/* Docenze */}
+        {sezioniPDF.dettaglioDocenze && (
         <div className="pdf-avoid-break">
           <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#7c3aed', borderLeft: '4px solid #7c3aed', paddingLeft: '8px' }}>C. Docenze — Totale: {formatCurrency(totaleDocenze)}</h3>
           {docenzeCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
@@ -880,10 +1011,12 @@ const BudgetPlannerMultiAula = () => {
             </table>
           )}
         </div>
+        )}
       </div>
 
       {/* PAGINA 3 — Riepilogo per Aula + Note */}
       <div className="pdf-page">
+        {sezioniPDF.confrontoAule && (<>
         <h2 style={{ margin: '0 0 14px', fontSize: '16px', color: '#1e293b', borderBottom: '2px solid #059669', paddingBottom: '6px' }}>Riepilogo per Aula</h2>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', marginBottom: '18px' }}>
           <thead>
@@ -919,9 +1052,10 @@ const BudgetPlannerMultiAula = () => {
             ))}
           </tbody>
         </table>
+        </>)}
 
         {/* Note */}
-        {note.length > 0 && (
+        {sezioniPDF.note && note.length > 0 && (
           <div className="pdf-avoid-break">
             <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #64748b', paddingLeft: '8px' }}>Note</h3>
             <div style={{ display: 'grid', gap: '8px' }}>

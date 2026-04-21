@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/PREVENTIVI/static/css/main.601f197e.css",
-    "main.js": "/PREVENTIVI/static/js/main.c4032d85.js",
+    "main.js": "/PREVENTIVI/static/js/main.b0c24f1e.js",
     "index.html": "/PREVENTIVI/index.html",
     "main.601f197e.css.map": "/PREVENTIVI/static/css/main.601f197e.css.map",
-    "main.c4032d85.js.map": "/PREVENTIVI/static/js/main.c4032d85.js.map"
+    "main.b0c24f1e.js.map": "/PREVENTIVI/static/js/main.b0c24f1e.js.map"
   },
   "entrypoints": [
     "static/css/main.601f197e.css",
-    "static/js/main.c4032d85.js"
+    "static/js/main.b0c24f1e.js"
   ]
 }

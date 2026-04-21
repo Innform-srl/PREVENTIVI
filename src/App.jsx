@@ -321,6 +321,10 @@ const BudgetPlannerMultiAula = () => {
     }
   };
 
+  const salvaPDF = () => {
+    window.print();
+  };
+
   // ============ EFFECTS ============
 
   useEffect(() => {
@@ -356,8 +360,21 @@ const BudgetPlannerMultiAula = () => {
   const btnStyle = { padding: '10px 20px', background: 'linear-gradient(135deg, #059669, #047857)', border: 'none', borderRadius: '10px', cursor: 'pointer', color: 'white', fontWeight: '600', fontSize: '13px' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', fontFamily: 'Inter, system-ui, sans-serif', color: '#1e293b' }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <>
+    <div className="app-shell" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', fontFamily: 'Inter, system-ui, sans-serif', color: '#1e293b' }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .print-area { display: none; }
+        @media print {
+          @page { size: A4; margin: 14mm; }
+          body { background: white !important; }
+          .app-shell { display: none !important; }
+          .print-area { display: block !important; }
+          .pdf-page { page-break-after: always; }
+          .pdf-page:last-child { page-break-after: auto; }
+          .pdf-avoid-break { page-break-inside: avoid; }
+        }
+      `}</style>
 
       <header style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px 32px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -370,6 +387,7 @@ const BudgetPlannerMultiAula = () => {
             <button onClick={() => setMostraModalNote(true)} style={{ padding: '10px 18px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', color: '#475569', fontWeight: '500', fontSize: '13px' }}>📝 Note</button>
             <button onClick={() => setMostraConfigAule(true)} style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', border: 'none', borderRadius: '10px', cursor: 'pointer', color: 'white', fontWeight: '600', fontSize: '13px' }}>🏫 Aule ({aule.length})</button>
             <button onClick={salvaPreventivo} disabled={isLoading} style={{ ...btnStyle, background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', opacity: isLoading ? 0.7 : 1 }}>{isLoading ? <LoadingSpinner /> : '💾 Salva'}</button>
+            <button onClick={salvaPDF} className="no-print" style={{ ...btnStyle, background: 'linear-gradient(135deg, #dc2626, #b91c1c)' }}>📄 Salva PDF</button>
             <button onClick={nuovoPreventivo} style={btnStyle}>➕ Nuovo</button>
           </div>
         </div>
@@ -651,6 +669,279 @@ const BudgetPlannerMultiAula = () => {
 
       {mostraAdmin && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>⚙️ Admin</h3><button onClick={() => setMostraAdmin(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><div><h4 style={{ margin: '0 0 12px', color: '#64748b', fontSize: '14px' }}>Progetti Salvati ({preventivi.length})</h4>{preventivi.length === 0 ? <p style={{ color: '#94a3b8' }}>Nessuno.</p> : preventivi.map(p => (<div key={p.id} style={{ padding: '14px', background: '#f8fafc', borderRadius: '10px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0' }}><div><div style={{ fontWeight: '600', color: '#1e293b' }}>{p.nome}</div><div style={{ fontSize: '12px', color: '#64748b' }}>{formatDate(p.updated_at)}</div></div><button onClick={() => eliminaPreventivo(p.id)} style={{ padding: '8px 16px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>Elimina</button></div>))}</div></div></div>)}
     </div>
+
+    {/* ============ AREA STAMPABILE (PDF) — visibile solo durante window.print() ============ */}
+    <div className="print-area" style={{ padding: '0', background: 'white', color: '#1e293b', fontFamily: 'Inter, Arial, sans-serif', fontSize: '11px', lineHeight: '1.4' }}>
+
+      {/* PAGINA 1 — Intestazione + Riepilogo Finanziario Globale */}
+      <div className="pdf-page">
+        <div className="pdf-avoid-break" style={{ borderBottom: '3px solid #2563eb', paddingBottom: '12px', marginBottom: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '22px', color: '#1e293b' }}>Preventivo Formativo</h1>
+              <h2 style={{ margin: '4px 0 0', fontSize: '16px', color: '#2563eb', fontWeight: '600' }}>{progetto.nome || '(Senza nome)'}</h2>
+              {progetto.descrizione && <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>{progetto.descrizione}</p>}
+            </div>
+            <div style={{ textAlign: 'right', fontSize: '10px', color: '#64748b' }}>
+              <div>Data stampa: {new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+              <div>Creato: {formatDate(progetto.dataCreazione)}</div>
+              <div>Aule attive: {aule.filter(a => a.attiva).length}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Riepilogo Finanziario Globale */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '18px' }}>
+          <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>Riepilogo Finanziario Globale</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <tbody>
+              <tr style={{ background: '#ecfdf5' }}>
+                <td style={{ padding: '8px', border: '1px solid #d1fae5', fontWeight: '600', color: '#047857' }}>A. Ricavo Totale</td>
+                <td style={{ padding: '8px', border: '1px solid #d1fae5', textAlign: 'right', fontWeight: '700', color: '#059669', fontSize: '13px' }}>{formatCurrency(ricavoTotale)}</td>
+              </tr>
+              <tr style={{ background: '#fef2f2' }}>
+                <td style={{ padding: '8px', border: '1px solid #fecaca', fontWeight: '600', color: '#b91c1c' }}>B. Costo Totale Progetto</td>
+                <td style={{ padding: '8px', border: '1px solid #fecaca', textAlign: 'right', fontWeight: '700', color: '#dc2626', fontSize: '13px' }}>{formatCurrency(costoTotaleProgetto)}</td>
+              </tr>
+              <tr style={{ background: '#eff6ff' }}>
+                <td style={{ padding: '8px', border: '1px solid #93c5fd', fontWeight: '600', color: '#1d4ed8' }}>C. Costo Partner 1</td>
+                <td style={{ padding: '8px', border: '1px solid #93c5fd', textAlign: 'right', fontWeight: '700', color: '#2563eb' }}>{formatCurrency(costoPartner1)}</td>
+              </tr>
+              <tr style={{ background: '#f5f3ff' }}>
+                <td style={{ padding: '8px', border: '1px solid #c4b5fd', fontWeight: '600', color: '#6d28d9' }}>D. Costo Partner 2</td>
+                <td style={{ padding: '8px', border: '1px solid #c4b5fd', textAlign: 'right', fontWeight: '700', color: '#7c3aed' }}>{formatCurrency(costoPartner2)}</td>
+              </tr>
+              <tr style={{ background: '#fffbeb' }}>
+                <td style={{ padding: '8px', border: '1px solid #fcd34d', fontWeight: '600', color: '#b45309' }}>E. Guadagno Azienda</td>
+                <td style={{ padding: '8px', border: '1px solid #fcd34d', textAlign: 'right', fontWeight: '700', color: '#d97706' }}>{formatCurrency(guadagnoAzienda)}</td>
+              </tr>
+              <tr style={{ background: '#f8fafc' }}>
+                <td style={{ padding: '8px', border: '1px solid #e2e8f0', fontWeight: '600', color: '#475569' }}>F. Altri Costi</td>
+                <td style={{ padding: '8px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '700', color: '#475569' }}>{formatCurrency(altriCosti)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Indicatori di incidenza */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '18px' }}>
+          <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #7c3aed', paddingLeft: '8px' }}>Indicatori di Incidenza sul Ricavo</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <thead>
+              <tr style={{ background: '#f1f5f9' }}>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Voce</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Incidenza %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#2563eb' }}>Inc. Partner 1</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaPartner1)}</td></tr>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#7c3aed' }}>Inc. Partner 2</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaPartner2)}</td></tr>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#475569' }}>Inc. Altri Costi</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaAltriCosti)}</td></tr>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#d97706' }}>Inc. Azienda (Margine)</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaAzienda)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Margine Totale */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '18px', padding: '14px', background: margine >= 0 ? '#ecfdf5' : '#fef2f2', border: '2px solid ' + (margine >= 0 ? '#059669' : '#dc2626'), borderRadius: '8px' }}>
+          <div style={{ fontSize: '12px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '4px' }}>MARGINE TOTALE</div>
+          <div style={{ fontSize: '26px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626', marginBottom: '6px' }}>{formatCurrency(margine)}</div>
+          <div style={{ fontSize: '10px', color: '#64748b' }}>
+            = Ricavo Totale ({formatCurrency(ricavoTotale)}) − Costo Totale ({formatCurrency(costoTotaleProgetto)}) + Guadagno Azienda ({formatCurrency(guadagnoAzienda)})
+          </div>
+        </div>
+
+        {/* Configurazione Aule */}
+        <div className="pdf-avoid-break">
+          <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #059669', paddingLeft: '8px' }}>Configurazione Aule</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <thead>
+              <tr style={{ background: '#f1f5f9' }}>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Aula</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Stato</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Allievi</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ore</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>UCS</th>
+                <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ricavo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aule.map(aula => (
+                <tr key={aula.id}>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', color: aula.colore, fontWeight: '600' }}>{aula.nome}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{aula.attiva ? 'Attiva' : 'Disattiva'}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{aula.numeroAllievi}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{aula.oreTotaliCorso}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(aula.ucsApplicata)}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#059669' }}>{formatCurrency(calcolaRicavoAula(aula))}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: '#f8fafc', fontWeight: '700' }}>
+                <td colSpan={5} style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>TOTALE RICAVO</td>
+                <td style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right', color: '#059669' }}>{formatCurrency(ricavoTotale)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {/* PAGINA 2 — Dettaglio Costi */}
+      <div className="pdf-page">
+        <h2 style={{ margin: '0 0 14px', fontSize: '16px', color: '#1e293b', borderBottom: '2px solid #dc2626', paddingBottom: '6px' }}>Dettaglio Costi</h2>
+
+        {/* Fee Commerciali */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#d97706', borderLeft: '4px solid #d97706', paddingLeft: '8px' }}>Fee Commerciali</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Fee</th><th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>%</th><th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Importo</th></tr></thead>
+            <tbody>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#2563eb', fontWeight: '600' }}>Fee Partner 1</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{commerciale.feePartner1.percentuale}%</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#2563eb' }}>{formatCurrency(feePartner1Calc)}</td></tr>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#7c3aed', fontWeight: '600' }}>Fee Partner 2</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{commerciale.feePartner2.percentuale}%</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#7c3aed' }}>{formatCurrency(feePartner2Calc)}</td></tr>
+              <tr style={{ background: '#f8fafc', fontWeight: '700' }}><td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>Totale Fee Commerciali</td><td style={{ padding: '6px', border: '1px solid #cbd5e1' }}></td><td style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'right', color: '#d97706' }}>{formatCurrency(totaleCommerciale)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Gestione */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#059669', borderLeft: '4px solid #059669', paddingLeft: '8px' }}>A. Funzionamento e Gestione — Totale: {formatCurrency(totaleGestione)}</h3>
+          {gestioneCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Voce</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>€/unità</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Q.tà</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Aule</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Subtotale</th></tr></thead>
+              <tbody>
+                {gestioneCosti.map(item => {
+                  const nomiAule = aule.filter(a => item.auleAssegnate.includes(a.id)).map(a => a.nome).join(', ') || '-';
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0' }}>{item.voce}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(item.costoUnitario)}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{item.quantita}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '9px' }}>{nomiAule}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#059669' }}>{formatCurrency(item.costoUnitario * item.quantita * item.auleAssegnate.length)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Realizzazione */}
+        <div className="pdf-avoid-break" style={{ marginBottom: '16px' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#2563eb', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>B. Realizzazione — Totale: {formatCurrency(totaleRealizzazione)}</h3>
+          {realizzazioneCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Voce</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Tariffa €/h</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ore</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P1</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Az</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Aule</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Subtotale</th></tr></thead>
+              <tbody>
+                {realizzazioneCosti.map(item => {
+                  const nomiAule = aule.filter(a => item.auleAssegnate.includes(a.id)).map(a => a.nome).join(', ') || '-';
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0' }}>{item.voce}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(item.tariffaOraria)}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{item.ore}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.partner1 ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.azienda ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '9px' }}>{nomiAule}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#2563eb' }}>{formatCurrency(item.tariffaOraria * item.ore * item.auleAssegnate.length)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Docenze */}
+        <div className="pdf-avoid-break">
+          <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#7c3aed', borderLeft: '4px solid #7c3aed', paddingLeft: '8px' }}>C. Docenze — Totale: {formatCurrency(totaleDocenze)}</h3>
+          {docenzeCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Docente</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Tariffa €/h</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ore</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P1</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P2</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Az</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Aule</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Subtotale</th></tr></thead>
+              <tbody>
+                {docenzeCosti.map(item => {
+                  const nomiAule = aule.filter(a => item.auleAssegnate.includes(a.id)).map(a => a.nome).join(', ') || '-';
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0' }}>{item.docente}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(item.tariffaOraria)}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{item.ore}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.partner1 ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.partner2 ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.azienda ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '9px' }}>{nomiAule}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#7c3aed' }}>{formatCurrency(item.tariffaOraria * item.ore * item.auleAssegnate.length)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* PAGINA 3 — Riepilogo per Aula + Note */}
+      <div className="pdf-page">
+        <h2 style={{ margin: '0 0 14px', fontSize: '16px', color: '#1e293b', borderBottom: '2px solid #059669', paddingBottom: '6px' }}>Riepilogo per Aula</h2>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', marginBottom: '18px' }}>
+          <thead>
+            <tr style={{ background: '#f1f5f9' }}>
+              <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Metrica</th>
+              {aule.filter(a => a.attiva).map(aula => <th key={aula.id} style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center', color: aula.colore }}>{aula.nome}</th>)}
+              <th style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center', background: '#f8fafc', fontWeight: '700' }}>TOTALE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { label: 'Allievi', getValue: (a) => a.numeroAllievi, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.numeroAllievi, 0) },
+              { label: 'Ore', getValue: (a) => a.oreTotaliCorso, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.oreTotaliCorso, 0) },
+              { label: 'UCS', getValue: (a) => a.ucsApplicata, format: formatCurrency, total: '-' },
+              { label: 'Ricavo', getValue: (a) => calcolaRicavoAula(a), format: formatCurrency, total: ricavoTotale, color: '#059669' },
+              { label: 'Costi Gestione', getValue: (a) => calcolaCostiAula(a.id).gestione, format: formatCurrency, total: totaleGestione },
+              { label: 'Costi Realizzazione', getValue: (a) => calcolaCostiAula(a.id).realizzazione, format: formatCurrency, total: totaleRealizzazione },
+              { label: 'Costi Docenze', getValue: (a) => calcolaCostiAula(a.id).docenze, format: formatCurrency, total: totaleDocenze },
+              { label: 'Fee Partner 1', getValue: (a) => calcolaCostiAula(a.id).feePartner1, format: formatCurrency, total: feePartner1Calc, color: '#2563eb' },
+              { label: 'Fee Partner 2', getValue: (a) => calcolaCostiAula(a.id).feePartner2, format: formatCurrency, total: feePartner2Calc, color: '#7c3aed' },
+              { label: 'Costo Partner 1', getValue: (a) => calcolaCostiAula(a.id).costoPartner1, format: formatCurrency, total: costoPartner1, color: '#2563eb' },
+              { label: 'Costo Partner 2', getValue: (a) => calcolaCostiAula(a.id).costoPartner2, format: formatCurrency, total: costoPartner2, color: '#7c3aed' },
+              { label: 'Guadagno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
+              { label: 'Altri Costi', getValue: (a) => calcolaCostiAula(a.id).altriCosti, format: formatCurrency, total: altriCosti },
+              { label: 'Costo Totale', getValue: (a) => calcolaCostiAula(a.id).totale, format: formatCurrency, total: costoTotaleProgetto, color: '#dc2626' },
+              { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
+            ].map((row, i) => (
+              <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
+                <td style={{ padding: '5px 6px', border: '1px solid #e2e8f0', fontWeight: row.color ? '600' : '400', color: row.color || '#1e293b' }}>{row.label}</td>
+                {aule.filter(a => a.attiva).map(aula => <td key={aula.id} style={{ padding: '5px 6px', border: '1px solid #e2e8f0', textAlign: 'right', color: row.color || '#1e293b' }}>{row.format(row.getValue(aula))}</td>)}
+                <td style={{ padding: '5px 6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '700', background: '#f8fafc', color: row.color || '#1e293b' }}>{typeof row.total === 'number' ? row.format(row.total) : row.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Note */}
+        {note.length > 0 && (
+          <div className="pdf-avoid-break">
+            <h3 style={{ margin: '0 0 10px', fontSize: '14px', color: '#1e293b', borderLeft: '4px solid #64748b', paddingLeft: '8px' }}>Note</h3>
+            <div style={{ display: 'grid', gap: '8px' }}>
+              {note.map(n => (
+                <div key={n.id} style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                  <div style={{ color: '#1e293b', fontSize: '11px' }}>{n.testo}</div>
+                  <div style={{ fontSize: '9px', color: '#64748b', marginTop: '4px' }}>{n.data}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ marginTop: '28px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '9px', color: '#94a3b8', textAlign: 'center' }}>
+          Budget Planner Multi-Aula • Documento generato il {new Date().toLocaleString('it-IT')}
+        </div>
+      </div>
+    </div>
+    </>
   );
 };
 

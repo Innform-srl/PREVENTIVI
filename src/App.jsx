@@ -800,7 +800,20 @@ const BudgetPlannerMultiAula = () => {
             <div style={{ textAlign: 'right', fontSize: '10px', color: '#64748b' }}>
               <div>Data stampa: {new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
               <div>Creato: {formatDate(progetto.dataCreazione)}</div>
-              <div>Aule attive: {aule.filter(a => a.attiva).length}</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '12px' }}>
+            <div style={{ padding: '10px 14px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: '600' }}>🏫 Aule attive</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>{aule.filter(a => a.attiva).length}</span>
+            </div>
+            <div style={{ padding: '10px 14px', background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '600' }}>👥 Allievi totali</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#7c3aed' }}>{aule.filter(a => a.attiva).reduce((acc, a) => acc + (a.numeroAllievi || 0), 0)}</span>
+            </div>
+            <div style={{ padding: '10px 14px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#047857', fontWeight: '600' }}>⏱️ Ore totali</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#059669' }}>{aule.filter(a => a.attiva).reduce((acc, a) => acc + (a.oreTotaliCorso || 0), 0)}</span>
             </div>
           </div>
         </div>

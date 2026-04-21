@@ -409,9 +409,12 @@ const BudgetPlannerMultiAula = () => {
           body { background: white !important; }
           .app-shell { display: none !important; }
           .print-area { display: block !important; }
-          .pdf-page { page-break-after: always; }
-          .pdf-page:last-child { page-break-after: auto; }
-          .pdf-avoid-break { page-break-inside: avoid; }
+          .pdf-page { page-break-after: auto; }
+          .pdf-avoid-break { page-break-inside: avoid; break-inside: avoid; }
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          thead { display: table-header-group; }
+          tfoot { display: table-footer-group; }
         }
       `}</style>
 

@@ -218,11 +218,14 @@ const BudgetPlannerMultiAula = () => {
     }, 0);
     const costoP1Aula = realizzazioneP1Aula + docenzeP1Aula + feeP1;
 
-    // Costo Partner 2 per aula: docenze marcate P2 + fee Partner 2
+    // Costo Partner 2 per aula: realizzazione marcate P2 + docenze marcate P2 + fee Partner 2
+    const realizzazioneP2Aula = realizzazioneCosti.filter(item => item.partner2 && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
+      return acc + (item.tariffaOraria * item.ore);
+    }, 0);
     const docenzeP2Aula = docenzeCosti.filter(item => item.partner2 && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
-    const costoP2Aula = docenzeP2Aula + feeP2;
+    const costoP2Aula = realizzazioneP2Aula + docenzeP2Aula + feeP2;
 
     // Guadagno Azienda per aula: attività marcate Azienda
     const realizzazioneAzAula = realizzazioneCosti.filter(item => item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
@@ -233,11 +236,12 @@ const BudgetPlannerMultiAula = () => {
     }, 0);
     const guadagnoAzAula = realizzazioneAzAula + docenzeAzAula;
 
-    // Righe marcate sia P1 che Az: pesano doppio sul costo aula
+    // Righe marcate sia P1 che Az oppure P2 che Az: pesano doppio sul costo aula
     const doppioP1AzAula = realizzazioneCosti.filter(item => item.partner1 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0) + docenzeCosti.filter(item => item.partner1 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0);
+    const doppioP2AzAula = realizzazioneCosti.filter(item => item.partner2 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0) + docenzeCosti.filter(item => item.partner2 && item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => acc + (item.tariffaOraria * item.ore), 0);
 
-    // Altri Costi per aula: gestione + realizzazione non P1 non Az + docenze non P2 non P1 non Az
-    const realizzazioneAltriAula = realizzazioneCosti.filter(item => !item.partner1 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
+    // Altri Costi per aula: gestione + realizzazione non P1 non P2 non Az + docenze non P2 non P1 non Az
+    const realizzazioneAltriAula = realizzazioneCosti.filter(item => !item.partner1 && !item.partner2 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
     const docenzeAltriAula = docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
@@ -255,18 +259,19 @@ const BudgetPlannerMultiAula = () => {
       costoPartner2: costoP2Aula,
       guadagnoAzienda: guadagnoAzAula,
       altriCosti: altriCostiAula,
-      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2 + doppioP1AzAula
+      totale: gestioneAula + realizzazioneAula + docenzeAula + feeP1 + feeP2 + doppioP1AzAula + doppioP2AzAula
     };
   };
   const totaleCommerciale = feePartner1Calc + feePartner2Calc;
   // I costi si moltiplicano per il numero di aule assegnate
   const costoPartner1 = realizzazioneCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner1).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner1Calc;
-  const costoPartner2 = docenzeCosti.filter(item => item.partner2).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner2Calc;
+  const costoPartner2 = realizzazioneCosti.filter(item => item.partner2).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner2).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + feePartner2Calc;
   const guadagnoAzienda = realizzazioneCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
-  // Quando una riga è marcata sia P1 che Az, il suo importo pesa doppio sul progetto (una volta P1, una volta Az)
+  // Quando una riga è marcata sia P1 che Az (o P2 che Az), il suo importo pesa doppio sul progetto (una volta come costo partner, una volta come guadagno azienda)
   const doppioP1Az = realizzazioneCosti.filter(item => item.partner1 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner1 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
-  const costoTotaleProgetto = totaleGestione + totaleRealizzazione + totaleDocenze + totaleCommerciale + doppioP1Az;
-  const altriCosti = totaleGestione + realizzazioneCosti.filter(item => !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
+  const doppioP2Az = realizzazioneCosti.filter(item => item.partner2 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => item.partner2 && item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
+  const costoTotaleProgetto = totaleGestione + totaleRealizzazione + totaleDocenze + totaleCommerciale + doppioP1Az + doppioP2Az;
+  const altriCosti = totaleGestione + realizzazioneCosti.filter(item => !item.partner1 && !item.partner2 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0) + docenzeCosti.filter(item => !item.partner2 && !item.partner1 && !item.azienda).reduce((acc, item) => acc + (item.tariffaOraria * item.ore * item.auleAssegnate.length), 0);
   const margine = ricavoTotale - costoTotaleProgetto + guadagnoAzienda;
   const incidenzaPartner1 = ricavoTotale > 0 ? (costoPartner1 / ricavoTotale) * 100 : 0;
   const incidenzaPartner2 = ricavoTotale > 0 ? (costoPartner2 / ricavoTotale) * 100 : 0;
@@ -293,7 +298,7 @@ const BudgetPlannerMultiAula = () => {
   // ============ GESTIONE RIGHE COSTI ============
 
   const aggiungiRigaGestione = () => setGestioneCosti([...gestioneCosti, { id: Date.now(), voce: 'Nuova Voce', costoUnitario: 0, quantita: 1, note: '', auleAssegnate: aule.map(a => a.id) }]);
-  const aggiungiRigaRealizzazione = () => setRealizzazioneCosti([...realizzazioneCosti, { id: Date.now(), voce: 'Nuova Attività', tariffaOraria: 0, ore: 0, partner1: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
+  const aggiungiRigaRealizzazione = () => setRealizzazioneCosti([...realizzazioneCosti, { id: Date.now(), voce: 'Nuova Attività', tariffaOraria: 0, ore: 0, partner1: false, partner2: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
   const aggiungiRigaDocenze = () => setDocenzeCosti([...docenzeCosti, { id: Date.now(), docente: 'Nuovo Docente', tariffaOraria: 0, ore: 0, partner1: false, partner2: false, azienda: false, auleAssegnate: aule.map(a => a.id) }]);
   const rimuoviRigaGestione = (id) => setGestioneCosti(gestioneCosti.filter(item => item.id !== id));
   const rimuoviRigaRealizzazione = (id) => setRealizzazioneCosti(realizzazioneCosti.filter(item => item.id !== id));
@@ -592,7 +597,7 @@ const BudgetPlannerMultiAula = () => {
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Voce di Costo</label><input type="text" value={item.voce} onChange={(e) => aggiornaGestione(item.id, 'voce', e.target.value)} style={inputStyle} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Costo Unitario €</label><input type="number" step="0.01" value={item.costoUnitario || ''} onChange={(e) => aggiornaGestione(item.id, 'costoUnitario', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Quantità</label><input type="number" value={item.quantita || ''} onChange={(e) => aggiornaGestione(item.id, 'quantita', parseInt(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#ecfdf5', borderRadius: '10px', fontWeight: '700', color: '#059669', border: '1px solid #a7f3d0' }}>{formatCurrency(item.costoUnitario * item.quantita)}</div></div>
+                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#ecfdf5', borderRadius: '10px', fontWeight: '700', color: '#059669', border: '1px solid #a7f3d0', lineHeight: '1.2' }}>{formatCurrency(item.costoUnitario * item.quantita * Math.max(item.auleAssegnate.length, 1))}{item.auleAssegnate.length > 1 && (<div style={{ fontSize: '10px', fontWeight: '500', color: '#047857', marginTop: '2px' }}>{formatCurrency(item.costoUnitario * item.quantita)} × {item.auleAssegnate.length} aule</div>)}</div></div>
                       <button onClick={() => rimuoviRigaGestione(item.id)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '10px', cursor: 'pointer' }}>🗑️</button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -608,12 +613,13 @@ const BudgetPlannerMultiAula = () => {
               {realizzazioneCosti.length === 0 ? <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Nessuna voce.</div> : (
                 <div style={{ display: 'grid', gap: '12px' }}>{realizzazioneCosti.map((item) => (
                   <div key={item.id} style={{ padding: '20px', background: '#fafafa', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto auto auto', gap: '12px', alignItems: 'end', marginBottom: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto auto auto auto', gap: '12px', alignItems: 'end', marginBottom: '16px' }}>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Voce</label><input type="text" value={item.voce} onChange={(e) => aggiornaRealizzazione(item.id, 'voce', e.target.value)} style={inputStyle} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Tariffa €/h</label><input type="number" step="0.01" value={item.tariffaOraria || ''} onChange={(e) => aggiornaRealizzazione(item.id, 'tariffaOraria', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Ore</label><input type="number" value={item.ore || ''} onChange={(e) => aggiornaRealizzazione(item.id, 'ore', parseInt(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#eff6ff', borderRadius: '10px', fontWeight: '700', color: '#2563eb', border: '1px solid #93c5fd' }}>{formatCurrency(item.tariffaOraria * item.ore)}</div></div>
+                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#eff6ff', borderRadius: '10px', fontWeight: '700', color: '#2563eb', border: '1px solid #93c5fd', lineHeight: '1.2' }}>{formatCurrency(item.tariffaOraria * item.ore * Math.max(item.auleAssegnate.length, 1))}{item.auleAssegnate.length > 1 && (<div style={{ fontSize: '10px', fontWeight: '500', color: '#1d4ed8', marginTop: '2px' }}>{formatCurrency(item.tariffaOraria * item.ore)} × {item.auleAssegnate.length} aule</div>)}</div></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P1</label><input type="checkbox" checked={item.partner1} onChange={(e) => aggiornaRealizzazione(item.id, 'partner1', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#2563eb' }} /></div>
+                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P2</label><input type="checkbox" checked={!!item.partner2} onChange={(e) => aggiornaRealizzazione(item.id, 'partner2', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#7c3aed' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Az</label><input type="checkbox" checked={item.azienda} onChange={(e) => aggiornaRealizzazione(item.id, 'azienda', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#d97706' }} /></div>
                       <button onClick={() => rimuoviRigaRealizzazione(item.id)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '10px', cursor: 'pointer' }}>🗑️</button>
                     </div>
@@ -634,7 +640,7 @@ const BudgetPlannerMultiAula = () => {
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Docente</label><input type="text" value={item.docente} onChange={(e) => aggiornaDocenze(item.id, 'docente', e.target.value)} style={inputStyle} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Tariffa €/h</label><input type="number" step="0.01" value={item.tariffaOraria || ''} onChange={(e) => aggiornaDocenze(item.id, 'tariffaOraria', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
                       <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Ore</label><input type="number" value={item.ore || ''} onChange={(e) => aggiornaDocenze(item.id, 'ore', parseInt(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#f5f3ff', borderRadius: '10px', fontWeight: '700', color: '#7c3aed', border: '1px solid #c4b5fd' }}>{formatCurrency(item.tariffaOraria * item.ore)}</div></div>
+                      <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Subtotale</label><div style={{ padding: '12px', background: '#f5f3ff', borderRadius: '10px', fontWeight: '700', color: '#7c3aed', border: '1px solid #c4b5fd', lineHeight: '1.2' }}>{formatCurrency(item.tariffaOraria * item.ore * Math.max(item.auleAssegnate.length, 1))}{item.auleAssegnate.length > 1 && (<div style={{ fontSize: '10px', fontWeight: '500', color: '#6d28d9', marginTop: '2px' }}>{formatCurrency(item.tariffaOraria * item.ore)} × {item.auleAssegnate.length} aule</div>)}</div></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P1</label><input type="checkbox" checked={item.partner1} onChange={(e) => aggiornaDocenze(item.id, 'partner1', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#2563eb' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>P2</label><input type="checkbox" checked={item.partner2} onChange={(e) => aggiornaDocenze(item.id, 'partner2', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#7c3aed' }} /></div>
                       <div style={{ textAlign: 'center' }}><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Az</label><input type="checkbox" checked={item.azienda} onChange={(e) => aggiornaDocenze(item.id, 'azienda', e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#d97706' }} /></div>
@@ -978,7 +984,7 @@ const BudgetPlannerMultiAula = () => {
           <h3 style={{ margin: '0 0 8px', fontSize: '13px', color: '#2563eb', borderLeft: '4px solid #2563eb', paddingLeft: '8px' }}>B. Realizzazione — Totale: {formatCurrency(totaleRealizzazione)}</h3>
           {realizzazioneCosti.length === 0 ? <p style={{ fontSize: '10px', color: '#94a3b8', margin: '0' }}>Nessuna voce.</p> : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
-              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Voce</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Tariffa €/h</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ore</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P1</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Az</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Aule</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Subtotale</th></tr></thead>
+              <thead><tr style={{ background: '#f1f5f9' }}><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'left' }}>Voce</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Tariffa €/h</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Ore</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P1</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>P2</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Az</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'center' }}>Aule</th><th style={{ padding: '5px', border: '1px solid #cbd5e1', textAlign: 'right' }}>Subtotale</th></tr></thead>
               <tbody>
                 {realizzazioneCosti.map(item => {
                   const nomiAule = aule.filter(a => item.auleAssegnate.includes(a.id)).map(a => a.nome).join(', ') || '-';
@@ -988,6 +994,7 @@ const BudgetPlannerMultiAula = () => {
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(item.tariffaOraria)}</td>
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{item.ore}</td>
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.partner1 ? '✓' : ''}</td>
+                      <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.partner2 ? '✓' : ''}</td>
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{item.azienda ? '✓' : ''}</td>
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'center', fontSize: '9px' }}>{nomiAule}</td>
                       <td style={{ padding: '5px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#2563eb' }}>{formatCurrency(item.tariffaOraria * item.ore * item.auleAssegnate.length)}</td>

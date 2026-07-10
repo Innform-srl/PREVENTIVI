@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabaseClient';
+import Login from './Login';
 
-const BudgetPlannerMultiAula = () => {
+const BudgetPlannerMultiAula = ({ userEmail }) => {
   const [progetto, setProgetto] = useState({ nome: '', descrizione: '', dataCreazione: new Date().toISOString() });
   const [aule, setAule] = useState([
     { id: 1, nome: 'Aula 1', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#2563eb' },
@@ -435,6 +436,7 @@ const BudgetPlannerMultiAula = () => {
             <button onClick={() => setMostraConfigAule(true)} style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', border: 'none', borderRadius: '10px', cursor: 'pointer', color: 'white', fontWeight: '600', fontSize: '13px' }}>🏫 Aule ({aule.length})</button>
             <button onClick={salvaPreventivo} disabled={isLoading} style={{ ...btnStyle, background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', opacity: isLoading ? 0.7 : 1 }}>{isLoading ? <LoadingSpinner /> : '💾 Salva'}</button>
             <button onClick={salvaPDF} className="no-print" style={{ ...btnStyle, background: 'linear-gradient(135deg, #dc2626, #b91c1c)' }}>📄 Salva PDF</button>
+            <button onClick={() => supabase.auth.signOut()} title={userEmail} style={{ padding: '10px 18px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', color: '#475569', fontWeight: '500', fontSize: '13px' }}>🚪 Esci</button>
             <button onClick={nuovoPreventivo} style={btnStyle}>➕ Nuovo</button>
           </div>
         </div>
@@ -1102,4 +1104,19 @@ const BudgetPlannerMultiAula = () => {
   );
 };
 
-export default BudgetPlannerMultiAula;
+// Auth gate: shows the login screen until a Supabase session is active
+const App = () => {
+  const [session, setSession] = useState(undefined); // undefined = checking, null = not logged in
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  if (session === undefined) return null;
+  if (!session) return <Login />;
+  return <BudgetPlannerMultiAula userEmail={session.user?.email} />;
+};
+
+export default App;

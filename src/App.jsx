@@ -235,7 +235,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
     }, 0);
     const costoP2Aula = realizzazioneP2Aula + docenzeP2Aula + feeP2;
 
-    // Guadagno Azienda per aula: attività marcate Azienda
+    // Lavoro Interno Azienda per aula: attività marcate Azienda
     const realizzazioneAzAula = realizzazioneCosti.filter(item => item.azienda && item.auleAssegnate.includes(aulaId)).reduce((acc, item) => {
       return acc + (item.tariffaOraria * item.ore);
     }, 0);
@@ -469,7 +469,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 <div style={{ padding: '20px', background: 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', border: '1px solid #fca5a5' }}><div style={{ fontSize: '12px', color: '#b91c1c', fontWeight: '500' }}>B. Costo Totale</div><div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>{formatCurrency(costoTotaleProgetto)}</div></div>
                 <div style={{ padding: '20px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderRadius: '16px', border: '1px solid #93c5fd' }}><div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: '500' }}>C. Costo Partner 1</div><div style={{ fontSize: '24px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency(costoPartner1)}</div></div>
                 <div style={{ padding: '20px', background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', borderRadius: '16px', border: '1px solid #c4b5fd' }}><div style={{ fontSize: '12px', color: '#6d28d9', fontWeight: '500' }}>D. Costo Partner 2</div><div style={{ fontSize: '24px', fontWeight: '700', color: '#7c3aed' }}>{formatCurrency(costoPartner2)}</div></div>
-                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', borderRadius: '16px', border: '1px solid #fcd34d' }}><div style={{ fontSize: '12px', color: '#b45309', fontWeight: '500' }}>E. Guadagno Azienda</div><div style={{ fontSize: '24px', fontWeight: '700', color: '#d97706' }}>{formatCurrency(guadagnoAzienda)}</div></div>
+                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', borderRadius: '16px', border: '1px solid #fcd34d' }}><div style={{ fontSize: '12px', color: '#b45309', fontWeight: '500' }}>E. Lavoro Interno Azienda</div><div style={{ fontSize: '24px', fontWeight: '700', color: '#d97706' }}>{formatCurrency(guadagnoAzienda)}</div></div>
                 <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}><div style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>F. Altri Costi</div><div style={{ fontSize: '24px', fontWeight: '700', color: '#475569' }}>{formatCurrency(altriCosti)}</div></div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
@@ -478,7 +478,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 ))}
               </div>
               <div style={{ padding: '28px', background: margine >= 0 ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', textAlign: 'center', border: '1px solid ' + (margine >= 0 ? '#a7f3d0' : '#fca5a5') }}>
-                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '8px' }}>MARGINE TOTALE</div>
+                <div style={{ fontSize: '14px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '8px' }}>UTILE AZIENDA</div>
                 <div style={{ fontSize: '42px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626', marginBottom: '16px' }}>{formatCurrency(margine)}</div>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '13px', color: margine >= 0 ? '#047857' : '#b91c1c', background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '10px' }}>
                   <span>= A. Ricavo Totale</span>
@@ -487,11 +487,11 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                   <span>B. Costo Totale</span>
                   <span style={{ fontWeight: '700' }}>({formatCurrency(costoTotaleProgetto)})</span>
                   <span>+</span>
-                  <span>E. Guadagno Azienda</span>
+                  <span>E. Lavoro Interno Azienda</span>
                   <span style={{ fontWeight: '700' }}>({formatCurrency(guadagnoAzienda)})</span>
                 </div>
                 <div style={{ fontSize: '11px', color: margine >= 0 ? '#059669' : '#dc2626', marginTop: '10px', opacity: 0.8, fontStyle: 'italic' }}>
-                  Il Guadagno Azienda deriva dalle voci in "Costi → Realizzazione" e "Costi → Docenze" con checkbox "Az" attivo
+                  Il Lavoro Interno Azienda deriva dalle voci in "Costi → Realizzazione" e "Costi → Docenze" con checkbox "Az" attivo
                 </div>
               </div>
             </section>
@@ -505,8 +505,8 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                       <div style={{ display: 'grid', gap: '12px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Ricavo</span><span style={{ fontWeight: '600', color: '#059669' }}>{formatCurrency(ricavo)}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Costi</span><span style={{ fontWeight: '600', color: '#dc2626' }}>{formatCurrency(costi.totale)}</span></div>
-                        {costi.guadagnoAzienda > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #fcd34d' }}><span style={{ color: '#b45309' }}>+ Guadagno Azienda</span><span style={{ fontWeight: '600', color: '#d97706' }}>{formatCurrency(costi.guadagnoAzienda)}</span></div>}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: margineAula >= 0 ? '#ecfdf5' : '#fef2f2', borderRadius: '10px', border: '1px solid ' + (margineAula >= 0 ? '#a7f3d0' : '#fca5a5') }}><span style={{ fontWeight: '600', color: '#1e293b' }}>Margine</span><span style={{ fontWeight: '700', fontSize: '18px', color: margineAula >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margineAula)}</span></div>
+                        {costi.guadagnoAzienda > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #fcd34d' }}><span style={{ color: '#b45309' }}>+ Lavoro Interno Azienda</span><span style={{ fontWeight: '600', color: '#d97706' }}>{formatCurrency(costi.guadagnoAzienda)}</span></div>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: margineAula >= 0 ? '#ecfdf5' : '#fef2f2', borderRadius: '10px', border: '1px solid ' + (margineAula >= 0 ? '#a7f3d0' : '#fca5a5') }}><span style={{ fontWeight: '600', color: '#1e293b' }}>Utile Azienda</span><span style={{ fontWeight: '700', fontSize: '18px', color: margineAula >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margineAula)}</span></div>
                       </div>
                     </div>
                   );
@@ -692,10 +692,10 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                     { label: 'Fee Partner 2 (' + commerciale.feePartner2.percentuale + '%)', getValue: (a) => calcolaCostiAula(a.id).feePartner2, format: formatCurrency, total: feePartner2Calc, color: '#7c3aed' },
                     { label: 'Costo Partner 1', getValue: (a) => calcolaCostiAula(a.id).costoPartner1, format: formatCurrency, total: costoPartner1, color: '#2563eb' },
                     { label: 'Costo Partner 2', getValue: (a) => calcolaCostiAula(a.id).costoPartner2, format: formatCurrency, total: costoPartner2, color: '#7c3aed' },
-                    { label: 'Guadagno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
+                    { label: 'Lavoro Interno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
                     { label: 'Altri Costi', getValue: (a) => calcolaCostiAula(a.id).altriCosti, format: formatCurrency, total: altriCosti },
                     { label: 'Costo Totale', getValue: (a) => calcolaCostiAula(a.id).totale, format: formatCurrency, total: costoTotaleProgetto, color: '#dc2626' },
-                    { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
+                    { label: 'Utile Azienda', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
                   ].map((row, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}><td style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', color: row.color || '#1e293b', fontWeight: row.color ? '600' : '400' }}>{row.label}</td>{aule.filter(a => a.attiva).map(aula => <td key={aula.id} style={{ padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid #e2e8f0', color: row.color || '#1e293b' }}>{row.format(row.getValue(aula))}</td>)}<td style={{ padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid #e2e8f0', fontWeight: '700', color: row.color || '#1e293b', background: '#f8fafc' }}>{typeof row.total === 'number' ? row.format(row.total) : row.total}</td></tr>
                   ))}
@@ -753,7 +753,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 { chiave: 'intestazione', label: '📋 Intestazione progetto', colore: '#2563eb' },
                 { chiave: 'riepilogoGlobale', label: '💰 Riepilogo finanziario globale', colore: '#059669' },
                 { chiave: 'incidenze', label: '📊 Indicatori di incidenza', colore: '#7c3aed' },
-                { chiave: 'margine', label: '🎯 Margine totale', colore: margine >= 0 ? '#059669' : '#dc2626' },
+                { chiave: 'margine', label: '🎯 Utile Azienda', colore: margine >= 0 ? '#059669' : '#dc2626' },
                 { chiave: 'configAule', label: '🏫 Configurazione aule', colore: '#059669' },
                 { chiave: 'feeCommerciali', label: '💼 Fee commerciali', colore: '#d97706' },
                 { chiave: 'dettaglioGestione', label: '🔧 Dettaglio gestione', colore: '#059669' },
@@ -867,7 +867,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 <td style={{ padding: '8px', border: '1px solid #c4b5fd', textAlign: 'right', fontWeight: '700', color: '#7c3aed' }}>{formatCurrency(costoPartner2)}</td>
               </tr>
               <tr style={{ background: '#fffbeb' }}>
-                <td style={{ padding: '8px', border: '1px solid #fcd34d', fontWeight: '600', color: '#b45309' }}>E. Guadagno Azienda</td>
+                <td style={{ padding: '8px', border: '1px solid #fcd34d', fontWeight: '600', color: '#b45309' }}>E. Lavoro Interno Azienda</td>
                 <td style={{ padding: '8px', border: '1px solid #fcd34d', textAlign: 'right', fontWeight: '700', color: '#d97706' }}>{formatCurrency(guadagnoAzienda)}</td>
               </tr>
               <tr style={{ background: '#f8fafc' }}>
@@ -894,19 +894,19 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#2563eb' }}>Inc. Partner 1</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaPartner1)}</td></tr>
               <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#7c3aed' }}>Inc. Partner 2</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaPartner2)}</td></tr>
               <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#475569' }}>Inc. Altri Costi</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaAltriCosti)}</td></tr>
-              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#d97706' }}>Inc. Azienda (Margine)</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaAzienda)}</td></tr>
+              <tr><td style={{ padding: '6px', border: '1px solid #e2e8f0', color: '#d97706' }}>Inc. Azienda (Utile)</td><td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600' }}>{formatPercentage(incidenzaAzienda)}</td></tr>
             </tbody>
           </table>
         </div>
         )}
 
-        {/* Margine Totale */}
+        {/* Utile Azienda */}
         {sezioniPDF.margine && (
         <div className="pdf-avoid-break" style={{ marginBottom: '18px', padding: '14px', background: margine >= 0 ? '#ecfdf5' : '#fef2f2', border: '2px solid ' + (margine >= 0 ? '#059669' : '#dc2626'), borderRadius: '8px' }}>
-          <div style={{ fontSize: '12px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '4px' }}>MARGINE TOTALE</div>
+          <div style={{ fontSize: '12px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600', marginBottom: '4px' }}>UTILE AZIENDA</div>
           <div style={{ fontSize: '26px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626', marginBottom: '6px' }}>{formatCurrency(margine)}</div>
           <div style={{ fontSize: '10px', color: '#64748b' }}>
-            = Ricavo Totale ({formatCurrency(ricavoTotale)}) − Costo Totale ({formatCurrency(costoTotaleProgetto)}) + Guadagno Azienda ({formatCurrency(guadagnoAzienda)})
+            = Ricavo Totale ({formatCurrency(ricavoTotale)}) − Costo Totale ({formatCurrency(costoTotaleProgetto)}) + Lavoro Interno Azienda ({formatCurrency(guadagnoAzienda)})
           </div>
         </div>
         )}
@@ -1078,10 +1078,10 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               { label: 'Fee Partner 2', getValue: (a) => calcolaCostiAula(a.id).feePartner2, format: formatCurrency, total: feePartner2Calc, color: '#7c3aed' },
               { label: 'Costo Partner 1', getValue: (a) => calcolaCostiAula(a.id).costoPartner1, format: formatCurrency, total: costoPartner1, color: '#2563eb' },
               { label: 'Costo Partner 2', getValue: (a) => calcolaCostiAula(a.id).costoPartner2, format: formatCurrency, total: costoPartner2, color: '#7c3aed' },
-              { label: 'Guadagno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
+              { label: 'Lavoro Interno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
               { label: 'Altri Costi', getValue: (a) => calcolaCostiAula(a.id).altriCosti, format: formatCurrency, total: altriCosti },
               { label: 'Costo Totale', getValue: (a) => calcolaCostiAula(a.id).totale, format: formatCurrency, total: costoTotaleProgetto, color: '#dc2626' },
-              { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
+              { label: 'Utile Azienda', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
             ].map((row, i) => (
               <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
                 <td style={{ padding: '5px 6px', border: '1px solid #e2e8f0', fontWeight: row.color ? '600' : '400', color: row.color || '#1e293b' }}>{row.label}</td>

@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 import Login from './Login';
 
 const BudgetPlannerMultiAula = ({ userEmail }) => {
-  const [progetto, setProgetto] = useState({ nome: '', descrizione: '', dataCreazione: new Date().toISOString() });
+  const [progetto, setProgetto] = useState({ nome: '', descrizione: '', dataCreazione: new Date().toISOString(), ore: 0, ucs: 0 });
   const [aule, setAule] = useState([
     { id: 1, nome: 'Aula 1', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#2563eb' },
     { id: 2, nome: 'Aula 2', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#7c3aed' }
@@ -133,8 +133,13 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
 
       if (data && data.dati) {
         const d = data.dati;
-        setProgetto(d.progetto || { nome: data.nome, descrizione: '', dataCreazione: data.created_at });
-        setAule(d.aule || [{ id: 1, nome: 'Aula 1', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#2563eb' }]);
+        const auleCaricate = d.aule || [{ id: 1, nome: 'Aula 1', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#2563eb' }];
+        const progettoCaricato = d.progetto || { nome: data.nome, descrizione: '', dataCreazione: data.created_at };
+        // Retro-compatibilità: preventivi vecchi avevano ore/UCS per-aula; se mancano a livello progetto, li ricavo dalla prima aula.
+        if (progettoCaricato.ore == null) progettoCaricato.ore = auleCaricate[0]?.oreTotaliCorso || 0;
+        if (progettoCaricato.ucs == null) progettoCaricato.ucs = auleCaricate[0]?.ucsApplicata || 0;
+        setProgetto(progettoCaricato);
+        setAule(auleCaricate);
         setGestioneCosti(d.gestioneCosti || []);
         setRealizzazioneCosti(d.realizzazioneCosti || []);
         setDocenzeCosti(d.docenzeCosti || []);
@@ -181,7 +186,9 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
 
   // ============ CALCOLI ============
 
-  const calcolaRicavoAula = (aula) => aula.numeroAllievi * aula.oreTotaliCorso * aula.ucsApplicata;
+  // Finanziamento a livello di progetto: ore e UCS presi una volta sola (non moltiplicati per aula).
+  // Il ricavo dell'aula è la quota proporzionale ai suoi allievi; la somma sulle aule attive dà il finanziamento totale.
+  const calcolaRicavoAula = (aula) => (progetto.ore || 0) * (aula.numeroAllievi || 0) * (progetto.ucs || 0);
 
   // Calcoli globali (definiti prima di calcolaCostiAula che li usa)
   const ricavoTotale = aule.filter(a => a.attiva).reduce((acc, aula) => acc + calcolaRicavoAula(aula), 0);
@@ -324,7 +331,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
   // ============ ALTRE FUNZIONI ============
 
   const nuovoPreventivo = () => {
-    setProgetto({ nome: '', descrizione: '', dataCreazione: new Date().toISOString() });
+    setProgetto({ nome: '', descrizione: '', dataCreazione: new Date().toISOString(), ore: 0, ucs: 0 });
     setAule([{ id: 1, nome: 'Aula 1', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#2563eb' }, { id: 2, nome: 'Aula 2', numeroAllievi: 0, oreTotaliCorso: 0, ucsApplicata: 0, attiva: true, colore: '#7c3aed' }]);
     setGestioneCosti([]); setRealizzazioneCosti([]); setDocenzeCosti([]);
     setCommerciale({ feePartner1: { percentuale: 0, note: 'Sul ricavo totale' }, feePartner2: { percentuale: 0, note: 'Sul ricavo totale' } });
@@ -494,7 +501,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 {aule.filter(a => a.attiva).map(aula => {
                   const ricavo = calcolaRicavoAula(aula); const costi = calcolaCostiAula(aula.id); const margineAula = ricavo - costi.totale + costi.guadagnoAzienda; return (
                     <div key={aula.id} style={{ padding: '24px', background: '#fafafa', borderRadius: '16px', border: '2px solid ' + aula.colore + '30' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: aula.colore }}>{aula.nome}</h3><span style={{ padding: '4px 12px', background: aula.colore, color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>{aula.numeroAllievi} allievi • {aula.oreTotaliCorso}h</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: aula.colore }}>{aula.nome}</h3><span style={{ padding: '4px 12px', background: aula.colore, color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>{aula.numeroAllievi} allievi • {progetto.ore}h</span></div>
                       <div style={{ display: 'grid', gap: '12px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Ricavo</span><span style={{ fontWeight: '600', color: '#059669' }}>{formatCurrency(ricavo)}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Costi</span><span style={{ fontWeight: '600', color: '#dc2626' }}>{formatCurrency(costi.totale)}</span></div>
@@ -517,6 +524,14 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569', fontSize: '13px' }}>Nome Progetto *</label><input type="text" value={progetto.nome} onChange={(e) => setProgetto({ ...progetto, nome: e.target.value })} style={inputStyle} placeholder="es. Progetto Formazione 2024" /></div>
                 <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569', fontSize: '13px' }}>Descrizione</label><input type="text" value={progetto.descrizione} onChange={(e) => setProgetto({ ...progetto, descrizione: e.target.value })} style={inputStyle} placeholder="Descrizione" /></div>
               </div>
+              <h3 style={{ margin: '28px 0 12px', fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>Parametri Finanziamento</h3>
+              <p style={{ margin: '0 0 16px', fontSize: '12px', color: '#94a3b8' }}>Ore e UCS valgono per l'intero progetto (una volta sola). Il finanziamento = Ore × Allievi totali × UCS.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', alignItems: 'end' }}>
+                <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569', fontSize: '13px' }}>Ore Totali Corso</label><input type="number" value={progetto.ore || ''} onChange={(e) => setProgetto({ ...progetto, ore: parseFloat(e.target.value) || 0 })} style={{ ...inputStyle, textAlign: 'center' }} placeholder="es. 100" /></div>
+                <div><label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569', fontSize: '13px' }}>UCS (€)</label><input type="number" step="0.01" value={progetto.ucs || ''} onChange={(e) => setProgetto({ ...progetto, ucs: parseFloat(e.target.value) || 0 })} style={{ ...inputStyle, textAlign: 'center' }} placeholder="es. 23,99" /></div>
+                <div style={{ padding: '12px', background: '#f5f3ff', borderRadius: '10px', textAlign: 'center', border: '1px solid #c4b5fd' }}><div style={{ fontSize: '11px', color: '#6d28d9' }}>👥 Allievi totali</div><div style={{ fontSize: '18px', fontWeight: '700', color: '#7c3aed' }}>{aule.filter(a => a.attiva).reduce((acc, a) => acc + (a.numeroAllievi || 0), 0)}</div></div>
+                <div style={{ padding: '12px', background: '#ecfdf5', borderRadius: '10px', textAlign: 'center', border: '1px solid #a7f3d0' }}><div style={{ fontSize: '11px', color: '#047857' }}>💰 Finanziamento totale</div><div style={{ fontSize: '18px', fontWeight: '700', color: '#059669' }}>{formatCurrency(ricavoTotale)}</div></div>
+              </div>
             </section>
             <section style={{ background: 'white', borderRadius: '20px', padding: '28px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>Configurazione Aule</h2><button onClick={aggiungiAula} style={btnStyle}>+ Aggiungi Aula</button></div>
@@ -535,9 +550,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
                       <div><label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#64748b' }}>Numero Allievi</label><input type="number" value={aula.numeroAllievi || ''} onChange={(e) => aggiornaAula(aula.id, 'numeroAllievi', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div><label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#64748b' }}>Ore Totali</label><input type="number" value={aula.oreTotaliCorso || ''} onChange={(e) => aggiornaAula(aula.id, 'oreTotaliCorso', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div><label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#64748b' }}>UCS (€)</label><input type="number" step="0.01" value={aula.ucsApplicata || ''} onChange={(e) => aggiornaAula(aula.id, 'ucsApplicata', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div>
-                      <div style={{ display: 'flex', alignItems: 'flex-end' }}><div style={{ padding: '12px', background: aula.colore + '15', borderRadius: '10px', width: '100%', textAlign: 'center', border: '1px solid ' + aula.colore + '30' }}><div style={{ fontSize: '11px', color: '#64748b' }}>Ricavo</div><div style={{ fontSize: '18px', fontWeight: '700', color: aula.colore }}>{formatCurrency(calcolaRicavoAula(aula))}</div></div></div>
+                      <div style={{ display: 'flex', alignItems: 'flex-end' }}><div style={{ padding: '12px', background: aula.colore + '15', borderRadius: '10px', width: '100%', textAlign: 'center', border: '1px solid ' + aula.colore + '30' }}><div style={{ fontSize: '11px', color: '#64748b' }}>Ricavo (quota aula)</div><div style={{ fontSize: '18px', fontWeight: '700', color: aula.colore }}>{formatCurrency(calcolaRicavoAula(aula))}</div></div></div>
                     </div>
                   </div>
                 ))}
@@ -669,8 +682,8 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                 <tbody>
                   {[
                     { label: 'Allievi', getValue: (a) => a.numeroAllievi, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.numeroAllievi, 0) },
-                    { label: 'Ore', getValue: (a) => a.oreTotaliCorso, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.oreTotaliCorso, 0) },
-                    { label: 'UCS', getValue: (a) => a.ucsApplicata, format: formatCurrency, total: '-' },
+                    { label: 'Ore', getValue: () => progetto.ore, format: (v) => v, total: progetto.ore },
+                    { label: 'UCS', getValue: () => progetto.ucs, format: formatCurrency, total: '-' },
                     { label: 'Ricavo', getValue: (a) => calcolaRicavoAula(a), format: formatCurrency, total: ricavoTotale, color: '#059669' },
                     { label: 'Costi Gestione', getValue: (a) => calcolaCostiAula(a.id).gestione, format: formatCurrency, total: totaleGestione },
                     { label: 'Costi Realizzazione', getValue: (a) => calcolaCostiAula(a.id).realizzazione, format: formatCurrency, total: totaleRealizzazione },
@@ -716,7 +729,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
 
       {mostraModalNote && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '500px', width: '90%', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>📝 Note</h3><button onClick={() => setMostraModalNote(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div>{note.length > 0 && <div style={{ marginBottom: '20px' }}>{note.map(n => <div key={n.id} style={{ padding: '14px', background: '#f8fafc', borderRadius: '10px', marginBottom: '8px', border: '1px solid #e2e8f0' }}><div style={{ color: '#1e293b' }}>{n.testo}</div><div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>{n.data}</div></div>)}</div>}{note.length === 0 && <p style={{ color: '#64748b', marginBottom: '20px' }}>Nessuna nota.</p>}<textarea value={nuovaNota} onChange={(e) => setNuovaNota(e.target.value)} placeholder="Scrivi una nota..." style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} /><div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}><button onClick={() => setMostraModalNote(false)} style={{ flex: 1, padding: '14px', background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer' }}>Annulla</button><button onClick={aggiungiNota} style={{ flex: 1, padding: '14px', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}>Salva</button></div></div></div>)}
 
-      {mostraConfigAule && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '700px', width: '90%', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>🏫 Gestione Aule</h3><button onClick={() => setMostraConfigAule(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><p style={{ color: '#64748b', marginBottom: '24px', fontSize: '14px' }}>Ogni aula = un'edizione con proprio finanziamento. Assegna i costi a una o più aule.</p><div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>{aule.map((aula) => (<div key={aula.id} style={{ padding: '20px', background: '#fafafa', borderRadius: '14px', border: '2px solid ' + aula.colore + '30' }}><div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><input type="color" value={aula.colore} onChange={(e) => aggiornaAula(aula.id, 'colore', e.target.value)} style={{ width: '40px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }} /><input type="text" value={aula.nome} onChange={(e) => aggiornaAula(aula.id, 'nome', e.target.value)} style={{ ...inputStyle, flex: 1, color: aula.colore, fontWeight: '600' }} /><label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><input type="checkbox" checked={aula.attiva} onChange={(e) => aggiornaAula(aula.id, 'attiva', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: aula.colore }} /><span style={{ fontSize: '13px', color: '#64748b' }}>Attiva</span></label>{aule.length > 1 && <button onClick={() => rimuoviAula(aula.id)} style={{ padding: '10px 14px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>🗑️</button>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Allievi</label><input type="number" value={aula.numeroAllievi || ''} onChange={(e) => aggiornaAula(aula.id, 'numeroAllievi', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Ore</label><input type="number" value={aula.oreTotaliCorso || ''} onChange={(e) => aggiornaAula(aula.id, 'oreTotaliCorso', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>UCS €</label><input type="number" step="0.01" value={aula.ucsApplicata || ''} onChange={(e) => aggiornaAula(aula.id, 'ucsApplicata', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div></div><div style={{ marginTop: '12px', padding: '10px', background: aula.colore + '15', borderRadius: '8px', textAlign: 'center', border: '1px solid ' + aula.colore + '30' }}><span style={{ fontSize: '12px', color: '#64748b' }}>Ricavo: </span><span style={{ fontSize: '18px', fontWeight: '700', color: aula.colore }}>{formatCurrency(calcolaRicavoAula(aula))}</span></div></div>))}</div><button onClick={aggiungiAula} style={{ width: '100%', padding: '16px', ...btnStyle, fontSize: '15px' }}>+ Aggiungi Nuova Aula</button></div></div>)}
+      {mostraConfigAule && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '700px', width: '90%', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>🏫 Gestione Aule</h3><button onClick={() => setMostraConfigAule(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><p style={{ color: '#64748b', marginBottom: '24px', fontSize: '14px' }}>Ogni aula raggruppa allievi e costi del progetto. Ore e UCS si impostano nei Dati Progetto (valgono per tutto il progetto).</p><div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>{aule.map((aula) => (<div key={aula.id} style={{ padding: '20px', background: '#fafafa', borderRadius: '14px', border: '2px solid ' + aula.colore + '30' }}><div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><input type="color" value={aula.colore} onChange={(e) => aggiornaAula(aula.id, 'colore', e.target.value)} style={{ width: '40px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }} /><input type="text" value={aula.nome} onChange={(e) => aggiornaAula(aula.id, 'nome', e.target.value)} style={{ ...inputStyle, flex: 1, color: aula.colore, fontWeight: '600' }} /><label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><input type="checkbox" checked={aula.attiva} onChange={(e) => aggiornaAula(aula.id, 'attiva', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: aula.colore }} /><span style={{ fontSize: '13px', color: '#64748b' }}>Attiva</span></label>{aule.length > 1 && <button onClick={() => rimuoviAula(aula.id)} style={{ padding: '10px 14px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>🗑️</button>}</div><div><label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', color: '#64748b' }}>Allievi</label><input type="number" value={aula.numeroAllievi || ''} onChange={(e) => aggiornaAula(aula.id, 'numeroAllievi', parseFloat(e.target.value) || 0)} style={{ ...inputStyle, textAlign: 'center' }} /></div><div style={{ marginTop: '12px', padding: '10px', background: aula.colore + '15', borderRadius: '8px', textAlign: 'center', border: '1px solid ' + aula.colore + '30' }}><span style={{ fontSize: '12px', color: '#64748b' }}>Ricavo: </span><span style={{ fontSize: '18px', fontWeight: '700', color: aula.colore }}>{formatCurrency(calcolaRicavoAula(aula))}</span></div></div>))}</div><button onClick={aggiungiAula} style={{ width: '100%', padding: '16px', ...btnStyle, fontSize: '15px' }}>+ Aggiungi Nuova Aula</button></div></div>)}
 
       {mostraAdmin && (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}><div style={{ background: 'white', borderRadius: '20px', padding: '32px', maxWidth: '600px', width: '90%', maxHeight: '80vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}><h3 style={{ margin: 0, color: '#1e293b' }}>⚙️ Admin</h3><button onClick={() => setMostraAdmin(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button></div><div><h4 style={{ margin: '0 0 12px', color: '#64748b', fontSize: '14px' }}>Progetti Salvati ({preventivi.length})</h4>{preventivi.length === 0 ? <p style={{ color: '#94a3b8' }}>Nessuno.</p> : preventivi.map(p => (<div key={p.id} style={{ padding: '14px', background: '#f8fafc', borderRadius: '10px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0' }}><div><div style={{ fontWeight: '600', color: '#1e293b' }}>{p.nome}</div><div style={{ fontSize: '12px', color: '#64748b' }}>{formatDate(p.updated_at)}</div></div><button onClick={() => eliminaPreventivo(p.id)} style={{ padding: '8px 16px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>Elimina</button></div>))}</div></div></div>)}
 
@@ -825,7 +838,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
             </div>
             <div style={{ padding: '10px 14px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', color: '#047857', fontWeight: '600' }}>⏱️ Ore totali</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: '#059669' }}>{aule.filter(a => a.attiva).reduce((acc, a) => acc + (a.oreTotaliCorso || 0), 0)}</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#059669' }}>{progetto.ore || 0}</span>
             </div>
           </div>
         </div>
@@ -919,8 +932,8 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                   <td style={{ padding: '6px', border: '1px solid #e2e8f0', color: aula.colore, fontWeight: '600' }}>{aula.nome}</td>
                   <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'center' }}>{aula.attiva ? 'Attiva' : 'Disattiva'}</td>
                   <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{aula.numeroAllievi}</td>
-                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{aula.oreTotaliCorso}</td>
-                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(aula.ucsApplicata)}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{progetto.ore}</td>
+                  <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right' }}>{formatCurrency(progetto.ucs)}</td>
                   <td style={{ padding: '6px', border: '1px solid #e2e8f0', textAlign: 'right', fontWeight: '600', color: '#059669' }}>{formatCurrency(calcolaRicavoAula(aula))}</td>
                 </tr>
               ))}
@@ -1055,8 +1068,8 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
           <tbody>
             {[
               { label: 'Allievi', getValue: (a) => a.numeroAllievi, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.numeroAllievi, 0) },
-              { label: 'Ore', getValue: (a) => a.oreTotaliCorso, format: (v) => v, total: aule.filter(a => a.attiva).reduce((acc, a) => acc + a.oreTotaliCorso, 0) },
-              { label: 'UCS', getValue: (a) => a.ucsApplicata, format: formatCurrency, total: '-' },
+              { label: 'Ore', getValue: () => progetto.ore, format: (v) => v, total: progetto.ore },
+              { label: 'UCS', getValue: () => progetto.ucs, format: formatCurrency, total: '-' },
               { label: 'Ricavo', getValue: (a) => calcolaRicavoAula(a), format: formatCurrency, total: ricavoTotale, color: '#059669' },
               { label: 'Costi Gestione', getValue: (a) => calcolaCostiAula(a.id).gestione, format: formatCurrency, total: totaleGestione },
               { label: 'Costi Realizzazione', getValue: (a) => calcolaCostiAula(a.id).realizzazione, format: formatCurrency, total: totaleRealizzazione },

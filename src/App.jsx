@@ -492,12 +492,13 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               <h2 style={{ margin: '0 0 24px', fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>Riepilogo per Aula</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
                 {aule.filter(a => a.attiva).map(aula => {
-                  const ricavo = calcolaRicavoAula(aula); const costi = calcolaCostiAula(aula.id); const margineAula = ricavo - costi.totale; return (
+                  const ricavo = calcolaRicavoAula(aula); const costi = calcolaCostiAula(aula.id); const margineAula = ricavo - costi.totale + costi.guadagnoAzienda; return (
                     <div key={aula.id} style={{ padding: '24px', background: '#fafafa', borderRadius: '16px', border: '2px solid ' + aula.colore + '30' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: aula.colore }}>{aula.nome}</h3><span style={{ padding: '4px 12px', background: aula.colore, color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>{aula.numeroAllievi} allievi • {aula.oreTotaliCorso}h</span></div>
                       <div style={{ display: 'grid', gap: '12px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Ricavo</span><span style={{ fontWeight: '600', color: '#059669' }}>{formatCurrency(ricavo)}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0' }}><span style={{ color: '#64748b' }}>Costi</span><span style={{ fontWeight: '600', color: '#dc2626' }}>{formatCurrency(costi.totale)}</span></div>
+                        {costi.guadagnoAzienda > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #fcd34d' }}><span style={{ color: '#b45309' }}>+ Guadagno Azienda</span><span style={{ fontWeight: '600', color: '#d97706' }}>{formatCurrency(costi.guadagnoAzienda)}</span></div>}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: margineAula >= 0 ? '#ecfdf5' : '#fef2f2', borderRadius: '10px', border: '1px solid ' + (margineAula >= 0 ? '#a7f3d0' : '#fca5a5') }}><span style={{ fontWeight: '600', color: '#1e293b' }}>Margine</span><span style={{ fontWeight: '700', fontSize: '18px', color: margineAula >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margineAula)}</span></div>
                       </div>
                     </div>
@@ -681,7 +682,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
                     { label: 'Guadagno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
                     { label: 'Altri Costi', getValue: (a) => calcolaCostiAula(a.id).altriCosti, format: formatCurrency, total: altriCosti },
                     { label: 'Costo Totale', getValue: (a) => calcolaCostiAula(a.id).totale, format: formatCurrency, total: costoTotaleProgetto, color: '#dc2626' },
-                    { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
+                    { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
                   ].map((row, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}><td style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', color: row.color || '#1e293b', fontWeight: row.color ? '600' : '400' }}>{row.label}</td>{aule.filter(a => a.attiva).map(aula => <td key={aula.id} style={{ padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid #e2e8f0', color: row.color || '#1e293b' }}>{row.format(row.getValue(aula))}</td>)}<td style={{ padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid #e2e8f0', fontWeight: '700', color: row.color || '#1e293b', background: '#f8fafc' }}>{typeof row.total === 'number' ? row.format(row.total) : row.total}</td></tr>
                   ))}
@@ -1067,7 +1068,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               { label: 'Guadagno Azienda', getValue: (a) => calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: guadagnoAzienda, color: '#d97706' },
               { label: 'Altri Costi', getValue: (a) => calcolaCostiAula(a.id).altriCosti, format: formatCurrency, total: altriCosti },
               { label: 'Costo Totale', getValue: (a) => calcolaCostiAula(a.id).totale, format: formatCurrency, total: costoTotaleProgetto, color: '#dc2626' },
-              { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
+              { label: 'Margine', getValue: (a) => calcolaRicavoAula(a) - calcolaCostiAula(a.id).totale + calcolaCostiAula(a.id).guadagnoAzienda, format: formatCurrency, total: margine, color: margine >= 0 ? '#059669' : '#dc2626' },
             ].map((row, i) => (
               <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
                 <td style={{ padding: '5px 6px', border: '1px solid #e2e8f0', fontWeight: row.color ? '600' : '400', color: row.color || '#1e293b' }}>{row.label}</td>

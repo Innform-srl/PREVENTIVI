@@ -41,6 +41,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
   const [tabAttiva, setTabAttiva] = useState('riepilogo');
   const [isLoading, setIsLoading] = useState(false);
   const [currentPreventivoId, setCurrentPreventivoId] = useState(null);
+  const [costiScrolled, setCostiScrolled] = useState(false);
 
   const coloriDisponibili = ['#2563eb', '#7c3aed', '#059669', '#d97706', '#dc2626', '#db2777', '#0891b2', '#65a30d'];
 
@@ -340,6 +341,17 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
     setMessaggioStato('Pronto.');
   };
 
+  // Crea una copia speculare del preventivo corrente come NUOVO (non sovrascrive l'originale)
+  const copiaPreventivo = () => {
+    const nomeBase = (progetto.nome || '').trim() || 'Preventivo';
+    // Se il nome finisce con un numero lo incremento (…2 -> …3), altrimenti aggiungo " 2"
+    const match = nomeBase.match(/^(.*?)(\d+)\s*$/);
+    const nuovoNome = match ? `${match[1]}${parseInt(match[2], 10) + 1}` : `${nomeBase} 2`;
+    setProgetto({ ...progetto, nome: nuovoNome, dataCreazione: new Date().toISOString() });
+    setCurrentPreventivoId(null);
+    setMessaggioStato(`📋 Copia pronta: "${nuovoNome}" — salvala con 💾 Salva (nuovo preventivo).`);
+  };
+
   const aggiungiNota = () => {
     if (nuovaNota.trim()) {
       setNote([...note, { id: Date.now(), testo: nuovaNota, data: new Date().toLocaleString() }]);
@@ -394,6 +406,14 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
     return () => clearTimeout(timer);
   }, [progetto, aule, gestioneCosti, realizzazioneCosti, docenzeCosti, commerciale, note]);
 
+  // Riepilogo Costi: passa alla versione compatta quando si scorre in basso
+  useEffect(() => {
+    const onScroll = () => setCostiScrolled(window.scrollY > 120);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   // ============ FORMATTING ============
 
   const formatCurrency = (v) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(v);
@@ -442,6 +462,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
             <button onClick={() => setMostraModalNote(true)} style={{ padding: '10px 18px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', color: '#475569', fontWeight: '500', fontSize: '13px' }}>📝 Note</button>
             <button onClick={() => setMostraConfigAule(true)} style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', border: 'none', borderRadius: '10px', cursor: 'pointer', color: 'white', fontWeight: '600', fontSize: '13px' }}>🏫 Aule ({aule.length})</button>
             <button onClick={salvaPreventivo} disabled={isLoading} style={{ ...btnStyle, background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', opacity: isLoading ? 0.7 : 1 }}>{isLoading ? <LoadingSpinner /> : '💾 Salva'}</button>
+            <button onClick={copiaPreventivo} title="Crea una copia come nuovo preventivo" style={{ ...btnStyle, background: 'linear-gradient(135deg, #0891b2, #0e7490)' }}>📋 Copia</button>
             <button onClick={salvaPDF} className="no-print" style={{ ...btnStyle, background: 'linear-gradient(135deg, #dc2626, #b91c1c)' }}>📄 Salva PDF</button>
             <button onClick={() => supabase.auth.signOut()} title={userEmail} style={{ padding: '10px 18px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '10px', cursor: 'pointer', color: '#475569', fontWeight: '500', fontSize: '13px' }}>🚪 Esci</button>
             <button onClick={nuovoPreventivo} style={btnStyle}>➕ Nuovo</button>
@@ -568,40 +589,59 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
 
         {tabAttiva === 'costi' && (
           <div>
-            {/* Riepilogo Sticky con Sticker */}
+            {/* Riepilogo Finanziario sticky — 2 stati: normale in cima, compatto allo scroll */}
             <div style={{
               position: 'sticky',
               top: '100px',
               zIndex: 50,
               marginBottom: '24px',
               background: 'white',
-              borderRadius: '20px',
-              padding: '28px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              borderRadius: costiScrolled ? '14px' : '20px',
+              padding: costiScrolled ? '10px 14px' : '24px',
+              boxShadow: costiScrolled ? '0 3px 10px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.08)',
+              transition: 'padding 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease'
             }}>
-              <h2 style={{ margin: '0 0 24px', fontSize: '18px', fontWeight: '600', color: '#1e293b' }}>📊 Riepilogo Costi</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', borderRadius: '16px', border: '1px solid #a7f3d0' }}>
-                  <div style={{ fontSize: '12px', color: '#047857', fontWeight: '500' }}>A. Gestione</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#059669' }}>{formatCurrency(totaleGestione)}</div>
+              {!costiScrolled ? (
+                <>
+                  <h2 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>📊 Riepilogo</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                    {[
+                      { label: 'A. Ricavo Totale', value: ricavoTotale, color: '#059669', bg: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', border: '#a7f3d0' },
+                      { label: 'B. Costo Totale', value: costoTotaleProgetto, color: '#dc2626', bg: 'linear-gradient(135deg, #fef2f2, #fecaca)', border: '#fca5a5' },
+                      { label: 'C. Costo Partner 1', value: costoPartner1, color: '#2563eb', bg: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '#93c5fd' },
+                      { label: 'D. Costo Partner 2', value: costoPartner2, color: '#7c3aed', bg: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', border: '#c4b5fd' },
+                      { label: 'E. Lavoro Interno Azienda', value: guadagnoAzienda, color: '#d97706', bg: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '#fcd34d' },
+                      { label: 'F. Altri Costi', value: altriCosti, color: '#475569', bg: '#f8fafc', border: '#e2e8f0' },
+                    ].map((b, i) => (
+                      <div key={i} style={{ padding: '14px', background: b.bg, borderRadius: '12px', border: '1px solid ' + b.border }}>
+                        <div style={{ fontSize: '11px', color: b.color, fontWeight: '500' }}>{b.label}</div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: b.color }}>{formatCurrency(b.value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: '16px', background: margine >= 0 ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '12px', textAlign: 'center', border: '1px solid ' + (margine >= 0 ? '#a7f3d0' : '#fca5a5') }}>
+                    <div style={{ fontSize: '12px', color: margine >= 0 ? '#047857' : '#b91c1c', fontWeight: '600' }}>UTILE AZIENDA</div>
+                    <div style={{ fontSize: '30px', fontWeight: '800', color: margine >= 0 ? '#059669' : '#dc2626' }}>{formatCurrency(margine)}</div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'stretch' }}>
+                  {[
+                    { label: 'Ricavo', value: ricavoTotale, color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' },
+                    { label: 'Costo Tot.', value: costoTotaleProgetto, color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
+                    { label: 'Partner 1', value: costoPartner1, color: '#2563eb', bg: '#eff6ff', border: '#93c5fd' },
+                    { label: 'Partner 2', value: costoPartner2, color: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
+                    { label: 'Lav. Interno', value: guadagnoAzienda, color: '#d97706', bg: '#fffbeb', border: '#fcd34d' },
+                    { label: 'Altri', value: altriCosti, color: '#475569', bg: '#f8fafc', border: '#e2e8f0' },
+                    { label: 'UTILE', value: margine, color: margine >= 0 ? '#059669' : '#dc2626', bg: margine >= 0 ? '#d1fae5' : '#fecaca', border: margine >= 0 ? '#6ee7b7' : '#fca5a5' },
+                  ].map((c, i) => (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '6px 10px', background: c.bg, borderRadius: '8px', border: '1px solid ' + c.border, minWidth: '92px', flex: '1 1 auto' }}>
+                      <span style={{ fontSize: '9px', color: c.color, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{c.label}</span>
+                      <span style={{ fontSize: '15px', fontWeight: '700', color: c.color, lineHeight: 1.1 }}>{formatCurrency(c.value)}</span>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderRadius: '16px', border: '1px solid #93c5fd' }}>
-                  <div style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: '500' }}>B. Realizzazione</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency(totaleRealizzazione)}</div>
-                </div>
-                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #f5f3ff, #ede9fe)', borderRadius: '16px', border: '1px solid #c4b5fd' }}>
-                  <div style={{ fontSize: '12px', color: '#6d28d9', fontWeight: '500' }}>C. Docenze</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#7c3aed' }}>{formatCurrency(totaleDocenze)}</div>
-                </div>
-                <div style={{ padding: '20px', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', borderRadius: '16px', border: '1px solid #fcd34d' }}>
-                  <div style={{ fontSize: '12px', color: '#b45309', fontWeight: '500' }}>D. Fee Commerciali</div>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#d97706' }}>{formatCurrency(totaleCommerciale)}</div>
-                </div>
-              </div>
-              <div style={{ padding: '24px', background: 'linear-gradient(135deg, #fef2f2, #fecaca)', borderRadius: '16px', textAlign: 'center', border: '1px solid #fca5a5' }}>
-                <div style={{ fontSize: '14px', color: '#b91c1c', fontWeight: '500' }}>COSTO TOTALE PROGETTO</div>
-                <div style={{ fontSize: '36px', fontWeight: '800', color: '#dc2626' }}>{formatCurrency(costoTotaleProgetto)}</div>
-              </div>
+              )}
             </div>
 
             <section style={{ background: 'white', borderRadius: '20px', padding: '28px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>

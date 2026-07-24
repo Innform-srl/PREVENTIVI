@@ -597,7 +597,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               marginBottom: '24px',
               background: 'white',
               borderRadius: costiScrolled ? '14px' : '20px',
-              padding: costiScrolled ? '10px 14px' : '24px',
+              padding: costiScrolled ? '14px 16px' : '24px',
               boxShadow: costiScrolled ? '0 3px 10px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.08)',
               transition: 'padding 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease'
             }}>
@@ -627,17 +627,17 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
               ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'stretch' }}>
                   {[
-                    { label: 'Ricavo', value: ricavoTotale, color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' },
-                    { label: 'Costo Tot.', value: costoTotaleProgetto, color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-                    { label: 'Partner 1', value: costoPartner1, color: '#2563eb', bg: '#eff6ff', border: '#93c5fd' },
-                    { label: 'Partner 2', value: costoPartner2, color: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
-                    { label: 'Lav. Interno', value: guadagnoAzienda, color: '#d97706', bg: '#fffbeb', border: '#fcd34d' },
-                    { label: 'Altri', value: altriCosti, color: '#475569', bg: '#f8fafc', border: '#e2e8f0' },
-                    { label: 'UTILE', value: margine, color: margine >= 0 ? '#059669' : '#dc2626', bg: margine >= 0 ? '#d1fae5' : '#fecaca', border: margine >= 0 ? '#6ee7b7' : '#fca5a5' },
+                    { label: 'A. Ricavo Totale', value: ricavoTotale, color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' },
+                    { label: 'B. Costo Totale', value: costoTotaleProgetto, color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
+                    { label: 'C. Partner 1', value: costoPartner1, color: '#2563eb', bg: '#eff6ff', border: '#93c5fd' },
+                    { label: 'D. Partner 2', value: costoPartner2, color: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
+                    { label: 'E. Lavoro Interno', value: guadagnoAzienda, color: '#d97706', bg: '#fffbeb', border: '#fcd34d' },
+                    { label: 'F. Altri Costi', value: altriCosti, color: '#475569', bg: '#f8fafc', border: '#e2e8f0' },
+                    { label: 'Utile Azienda', value: margine, color: margine >= 0 ? '#059669' : '#dc2626', bg: margine >= 0 ? '#d1fae5' : '#fecaca', border: margine >= 0 ? '#6ee7b7' : '#fca5a5' },
                   ].map((c, i) => (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '6px 10px', background: c.bg, borderRadius: '8px', border: '1px solid ' + c.border, minWidth: '92px', flex: '1 1 auto' }}>
-                      <span style={{ fontSize: '9px', color: c.color, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{c.label}</span>
-                      <span style={{ fontSize: '15px', fontWeight: '700', color: c.color, lineHeight: 1.1 }}>{formatCurrency(c.value)}</span>
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '8px 12px', background: c.bg, borderRadius: '10px', border: '1px solid ' + c.border, minWidth: '120px', flex: '1 1 auto' }}>
+                      <span style={{ fontSize: '11px', color: c.color, fontWeight: '600', marginBottom: '2px' }}>{c.label}</span>
+                      <span style={{ fontSize: '17px', fontWeight: '700', color: c.color, lineHeight: 1.15 }}>{formatCurrency(c.value)}</span>
                     </div>
                   ))}
                 </div>

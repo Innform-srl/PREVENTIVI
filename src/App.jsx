@@ -592,7 +592,7 @@ const BudgetPlannerMultiAula = ({ userEmail }) => {
             {/* Riepilogo Finanziario sticky — 2 stati: normale in cima, compatto allo scroll */}
             <div style={{
               position: 'sticky',
-              top: '100px',
+              top: '118px',
               zIndex: 50,
               marginBottom: '24px',
               background: 'white',
